@@ -29,6 +29,13 @@ fabricApi {
     configureDataGeneration {
         client = true
     }
+
+    @Suppress("UnstableApiUsage")
+    configureTests {
+        createSourceSet = true
+        modId = "${base.archivesName}_test"
+        eula = true
+    }
 }
 
 dependencies {
