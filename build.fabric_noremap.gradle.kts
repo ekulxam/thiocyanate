@@ -49,6 +49,8 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     implementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
+        implementation(project(":main"))
+    }
 }
 
 stonecutter {
@@ -62,7 +64,7 @@ fletchingTable {
     mixins.create("main") {
         // Default matches the default value in the annotation
         mixin("default", "${project.property("archives_base_name")}.mixins.json") {
-            env("CLIENT", "survivalblock.directional_melons.mixin.client")
+            env("CLIENT", "survivalblock.thiocyanate.mixin.client")
         }
     }
     mixins.all {
@@ -136,9 +138,6 @@ loom {
     }
 
     mods {
-        create("thiocyanate") {
-            sourceSet(sourceSets.main.get())
-        }
         create("thiocyanate_test") {
             sourceSet("testmod")
         }

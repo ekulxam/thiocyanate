@@ -7,4 +7,4 @@ plugins {
     id("com.google.devtools.ksp") version "2.3.0" apply false
     id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22" apply false
 }
-stonecutter active "26.1-fabric"
+stonecutter active "1.21.11-fabric"

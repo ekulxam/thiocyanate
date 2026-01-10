@@ -13,7 +13,7 @@
 			"survivalblock.thiocyanate_test.ThiocyanateTestmod"
 		],
 		"fabric-datagen": [
-          "survivalblock.thiocyanate_test.datagen.ThiocyanateDataGenerator"
+          "survivalblock.thiocyanate_test.datagen.ThiocyanateTestDataGenerator"
 		]
 	},
 	"mixins": [
