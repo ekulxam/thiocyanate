@@ -3,6 +3,7 @@
   "package": "survivalblock.thiocyanate_test.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "FabricDataGeneratorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

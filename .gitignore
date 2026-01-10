@@ -40,5 +40,6 @@ replay_*.log
 *.jfr
 /src/main/generated/.cache
 /versions/*/src/main/generated/.cache
+/versions/*/src/testmod/generated/.cache
 .github/ISSUE_TEMPLATE/issue.yml
 /.github

@@ -13,8 +13,8 @@ plugins {
 
 sourceSets {
     create("testmod") {
-        compileClasspath += main.get().compileClasspath
-        runtimeClasspath += main.get().runtimeClasspath
+        compileClasspath += main.get().output + main.get().compileClasspath
+        runtimeClasspath += main.get().output + main.get().runtimeClasspath
     }
 }
 
@@ -49,8 +49,6 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     implementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
-        implementation(project(":main"))
-    }
 }
 
 stonecutter {
@@ -88,6 +86,10 @@ tasks.processResources {
     }
 }
 
+tasks.named<Copy>("processTestmodResources") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.named("build") {
     finalizedBy("autoVersionChangelog")
 }
@@ -121,8 +123,6 @@ loom {
         programArgs("--username=Survivalblock", "--uuid=c45e97e6-94ef-42da-8b5e-0c3209551c3f")
     }
 
-
-
     runs {
         create("testmodClient") {
             client()
@@ -133,6 +133,16 @@ loom {
         create("testmodServer") {
             server()
             name = "Testmod Server"
+            source(sourceSets["testmod"])
+        }
+
+        create("testmodDatagen") {
+            client()
+            name = "Testmod Data Generation"
+            vmArg("-Dfabric-api.datagen")
+            vmArg("-Dfabric-api.datagen.output-dir=${file("src/testmod/generated")}")
+            vmArg("-Dfabric-api.datagen.modid=thiocyanate_test")
+            runDir("build/datagen")
             source(sourceSets["testmod"])
         }
     }

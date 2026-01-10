@@ -1,3 +1,4 @@
+import net.fabricmc.loom.task.RunGameTask
 import java.io.BufferedReader
 import java.io.FileReader
 import org.gradle.jvm.tasks.Jar
@@ -13,8 +14,8 @@ plugins {
 
 sourceSets {
     create("testmod") {
-        compileClasspath += main.get().compileClasspath
-        runtimeClasspath += main.get().runtimeClasspath
+        compileClasspath += main.get().output + main.get().compileClasspath
+        runtimeClasspath += main.get().output + main.get().runtimeClasspath
     }
 }
 
@@ -58,11 +59,6 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
-
-    println()
-    if (project != project(":thiocyanate")) {
-        modImplementation(project(":main"))
-    }
 }
 
 stonecutter {
@@ -100,6 +96,10 @@ tasks.processResources {
     }
 }
 
+tasks.named<Copy>("processTestmodResources") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+w
 tasks.named("build") {
     finalizedBy("autoVersionChangelog")
 }
@@ -143,6 +143,16 @@ loom {
         create("testmodServer") {
             server()
             name = "Testmod Server"
+            source(sourceSets["testmod"])
+        }
+
+        create("testmodDatagen") {
+            client()
+            name = "Testmod Data Generation"
+            vmArg("-Dfabric-api.datagen")
+            vmArg("-Dfabric-api.datagen.output-dir=${file("src/testmod/generated")}")
+            vmArg("-Dfabric-api.datagen.modid=thiocyanate_test")
+            runDir("build/datagen")
             source(sourceSets["testmod"])
         }
     }
