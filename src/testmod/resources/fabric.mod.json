@@ -10,10 +10,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"survivalblock.thiocyanate_testmod.ThiocyanateTestmod"
+			"survivalblock.thiocyanate_test.ThiocyanateTestmod"
 		],
 		"fabric-datagen": [
-          "survivalblock.thiocyanate.datagen.ThiocyanateDataGenerator"
+          "survivalblock.thiocyanate_test.datagen.ThiocyanateDataGenerator"
 		]
 	},
 	"mixins": [

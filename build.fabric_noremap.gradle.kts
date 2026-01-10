@@ -12,7 +12,10 @@ plugins {
 }
 
 sourceSets {
-    create("testmod")
+    create("testmod") {
+        compileClasspath += main.get().compileClasspath
+        runtimeClasspath += main.get().runtimeClasspath
+    }
 }
 
 version = "${project.property("mod_version")}+${stonecutter.current.version}"
