@@ -1,0 +1,22 @@
+{
+	"schemaVersion": 1,
+	"id": "thiocyanate_test",
+	"version": "${version}",
+	"name": "Thiocyanate Testmod",
+	"description": "",
+	"authors": [
+		"Survivalblock"
+	],
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"survivalblock.thiocyanate_testmod.ThiocyanateTestmod"
+		],
+		"fabric-datagen": [
+          "survivalblock.thiocyanate.datagen.ThiocyanateDataGenerator"
+		]
+	},
+	"mixins": [
+		"thiocyanate_test.mixins.json"
+	]
+}

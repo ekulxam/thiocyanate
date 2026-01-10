@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "thiocyanate",
+	"version": "${version}",
+	"name": "Thiocyanate",
+	"description": "SCN - a modern port of Cyanide",
+	"authors": [
+		"Survivalblock"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/thiocyanate",
+		"sources": "https://github.com/ekulxam/thiocyanate",
+        "issues": "https://github.com/ekulxam/thiocyanate/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/thiocyanate/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"survivalblock.thiocyanate.Thiocyanate"
+		],
+		"fabric-datagen": [
+          "survivalblock.thiocyanate.datagen.ThiocyanateDataGenerator"
+		]
+	},
+	"mixins": [
+		"thiocyanate.mixins.json"
+	],
+	"depends": {
+		"fabricloader": "*",
+        "minecraft": "*",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
