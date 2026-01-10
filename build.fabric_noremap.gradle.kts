@@ -13,7 +13,6 @@ plugins {
 
 sourceSets {
     create("testmod")
-    create("testmodClient")
 }
 
 version = "${project.property("mod_version")}+${stonecutter.current.version}"
@@ -110,17 +109,28 @@ loom {
         programArgs("--username=Survivalblock", "--uuid=c45e97e6-94ef-42da-8b5e-0c3209551c3f")
     }
 
+
+
     runs {
         create("testmodClient") {
             client()
             configName = "Testmod Client"
-            source(sourceSets["testmodClient"])
+            source(sourceSets["testmod"])
         }
 
         create("testmodServer") {
             server()
             name = "Testmod Server"
             source(sourceSets["testmod"])
+        }
+    }
+
+    mods {
+        create("thiocyanate") {
+            sourceSet(sourceSets.main.get())
+        }
+        create("thiocyanate_test") {
+            sourceSet("testmod")
         }
     }
 
