@@ -99,7 +99,7 @@ tasks.processResources {
 tasks.named<Copy>("processTestmodResources") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-w
+
 tasks.named("build") {
     finalizedBy("autoVersionChangelog")
 }

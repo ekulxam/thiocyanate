@@ -3,14 +3,12 @@ package survivalblock.thiocyanate_test.datagen;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricDynamicRegistryProvider;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 public class CyanideDynamicRegistriesGenerator extends FabricDynamicRegistryProvider {
     protected final Set<ResourceKey<?>> keys = new HashSet<>();
