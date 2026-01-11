@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
 import survivalblock.thiocyanate.Thiocyanate;
 import survivalblock.thiocyanate_test.NamedFeatureConfiguration;
 import survivalblock.thiocyanate_test.ThiocyanateTestmod;
@@ -23,6 +24,7 @@ import static survivalblock.thiocyanate_test.ThiocyanateTestmod.*;
 public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
     public static volatile boolean datapacking = false;
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
         {
@@ -35,20 +37,20 @@ public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
         {
             FabricDataGenerator.Pack test = createBuiltinDataPack(fabricDataGenerator, Thiocyanate.id("test"));
             CyanideDynamicRegistriesGenerator registriesGenerator = test.addProvider(CyanideDynamicRegistriesGenerator::new);
-            registriesGenerator.attach(BROKEN_FEATURE, INVALID_PRECIPITATION, INVALID_TEMPERATURE_MODIFIER, THE_VOID, UKNOWN_CARVER, UNKNOWN_FEATURES);
+            //registriesGenerator.attach(BROKEN_FEATURE, INVALID_PRECIPITATION, INVALID_TEMPERATURE_MODIFIER, THE_VOID, UKNOWN_CARVER, UNKNOWN_FEATURES);
             Codec<ConfiguredFeature> namedCodec = RecordCodecBuilder.create(
                     instance -> instance.group(
                                     Identifier.CODEC.fieldOf("type").forGetter(cf -> ((NamedFeatureConfiguration.Feature) (cf.feature())).id()),
-                                    Codec.unboundedMap(Codec.STRING, NamedFeatureConfiguration.CODEC).fieldOf("config").forGetter(cf -> Map.of("key", ((NamedFeatureConfiguration) (cf.config()))))
+                                    Codec.unboundedMap(Codec.STRING, NamedFeatureConfiguration.CODEC).fieldOf("config").forGetter(cf -> cf.config() instanceof NamedFeatureConfiguration nfc && !nfc.empty() ? Map.of("key", nfc) : Map.of())
                             )
                             .apply(instance, (id, config) -> new ConfiguredFeature<>(new NamedFeatureConfiguration.Feature(id), config.get("key"))
                             ));
             test.addProvider((fabricDataOutput, completableFuture) ->
-                    new CyanideCodecGenerator(fabricDataOutput, completableFuture, "worldgen/configured_feature", namedCodec, INVALID_JSON));
+                    new CyanideCodecGenerator(fabricDataOutput, completableFuture, "worldgen/configured_feature", namedCodec, INVALID_JSON, MISSING_FEATURE));
 
             registriesGenerator.attach(MISSING_FEATURE);
-            registriesGenerator.attach(ANOTHER_MISSING_REFERENCE, BROKEN_ORE_COPPER, BROKEN_ORE_TIN, INVALID_CONFIGURED_FEATURE, MISSING_CONFIGURED_FEATURE);
-            registriesGenerator.attach(INVALID_PROCESSORS);
+            //registriesGenerator.attach(ANOTHER_MISSING_REFERENCE, BROKEN_ORE_COPPER, BROKEN_ORE_TIN, INVALID_CONFIGURED_FEATURE, MISSING_CONFIGURED_FEATURE);
+            test.addProvider((fabricDataOutput, completableFuture) -> new CyanideCodecGenerator<>(fabricDataOutput, completableFuture, "worldgen/template_pools", StructureTemplatePool.DIRECT_CODEC, INVALID_PROCESSORS));
         }
     }
 
@@ -57,6 +59,8 @@ public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
         registryBuilder.add(Registries.CONFIGURED_FEATURE, ThiocyanateTestmod::bootstrapConfiguredFeatures);
         registryBuilder.add(Registries.PLACED_FEATURE, ThiocyanateTestmod::bootstrapPlacedFeatures);
         registryBuilder.add(Registries.BIOME, ThiocyanateTestmod::bootstrapBiomes);
+        registryBuilder.add(Registries.PROCESSOR_LIST, ThiocyanateTestmod::bootstrapInvalidProcessor);
+        registryBuilder.add(Registries.TEMPLATE_POOL, ThiocyanateTestmod::bootstrapTemplatePools);
     }
 
     /**

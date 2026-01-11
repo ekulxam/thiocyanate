@@ -17,9 +17,11 @@ import java.util.function.BiConsumer;
 public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
 
     private final Set<ResourceKey<T>> keys = new HashSet<>();
+    private final String directoryName;
 
     public CyanideCodecGenerator(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registriesFuture, String directoryName, Codec<T> codec, ResourceKey<T>... keys) {
         super(dataOutput, registriesFuture, PackOutput.Target.DATA_PACK, directoryName, codec);
+        this.directoryName = directoryName;
         this.keys.addAll(Arrays.asList(keys));
     }
 
@@ -35,6 +37,6 @@ public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
 
     @Override
     public String getName() {
-        return "Codec";
+        return "Codecs for " + this.directoryName;
     }
 }

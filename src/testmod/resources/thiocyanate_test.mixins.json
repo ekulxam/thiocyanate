@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "BiomeDataMixin",
-    "FabricDataGeneratorMixin"
+    "FabricDataGeneratorMixin",
+    "LegacySinglePoolElementAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
