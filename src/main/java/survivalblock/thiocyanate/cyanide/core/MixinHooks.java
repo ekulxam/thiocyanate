@@ -1,19 +1,19 @@
 package survivalblock.thiocyanate.cyanide.core;
 
-import java.util.stream.Stream;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
-
-import com.mojang.serialization.DataResult;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.valueproviders.ConstantFloat;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.FloatProvider;
 import net.minecraft.util.valueproviders.IntProvider;
+
+import java.util.stream.Stream;
 
 
 public final class MixinHooks {

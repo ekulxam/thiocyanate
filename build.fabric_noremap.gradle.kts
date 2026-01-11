@@ -1,6 +1,6 @@
+import org.gradle.jvm.tasks.Jar
 import java.io.BufferedReader
 import java.io.FileReader
-import org.gradle.jvm.tasks.Jar
 
 plugins {
     id("net.fabricmc.fabric-loom")

@@ -1,7 +1,6 @@
 //? if fabric {
 package survivalblock.thiocyanate.cyanide.platform;
 
-import java.util.Map;
 import com.google.gson.JsonElement;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.fabricmc.fabric.impl.registry.sync.DynamicRegistryViewImpl;
@@ -9,6 +8,8 @@ import net.fabricmc.fabric.impl.resource.conditions.ResourceConditionsImpl;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
+
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public final class FabricPlatform implements XPlatform {

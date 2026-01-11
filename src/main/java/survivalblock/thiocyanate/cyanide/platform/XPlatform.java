@@ -1,8 +1,5 @@
 package survivalblock.thiocyanate.cyanide.platform;
 
-import java.util.Map;
-import java.util.Optional;
-
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Decoder;
@@ -10,10 +7,13 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 
+import java.util.Map;
+import java.util.Optional;
+
 public interface XPlatform {
     XPlatform INSTANCE = getInstance();
 
-    static XPlatform getInstance() {
+    private static XPlatform getInstance() {
         //? if fabric {
         return new FabricPlatform();
         //?} else {

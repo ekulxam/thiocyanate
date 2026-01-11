@@ -1,23 +1,26 @@
 package survivalblock.thiocyanate.cyanide.core;
 
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.Hash;
-import org.apache.commons.lang3.mutable.MutableInt;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.FeatureSorter;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
+import org.apache.commons.lang3.mutable.MutableInt;
+import survivalblock.thiocyanate.Thiocyanate;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.*;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 public final class FeatureCycleDetector {
@@ -105,14 +108,14 @@ public final class FeatureCycleDetector {
         // Where some Fi,j may be the same (which would create connected components)
         for (FeatureData node : nodesToChildren.keySet()) {
             if (!inProgress.isEmpty()) {
-                throw new IllegalStateException("You somehow broke the universe; DFS bork (iteration finished with non-empty in-progress vertex set");
+                throw Thiocyanate.createException("You somehow broke the universe; DFS bork (iteration finished with non-empty in-progress vertex set)");
             }
 
             // In vanilla, the DFS returns true to indicate a cycle exists
             // The rest of this if branch is then just code to try and narrow down the error in an extremely unhelpful way
             if (!nonCyclicalNodes.contains(node) && depthFirstSearch(nodesToChildren, nonCyclicalNodes, inProgress, sortedFeatureData::add, featureCycle::add, node)) {
                 if (featureCycle.size() <= 1) {
-                    throw new IllegalStateException("There was a feature cycle that involved 0 or 1 feature??");
+                    throw Thiocyanate.createException("There was a feature cycle that involved 0 or 1 feature(s)??");
                 }
 
                 // Trim the cycle - the last feature should occur somewhere in the cycle. This is done before reversing, so last = index 0
@@ -129,7 +132,7 @@ public final class FeatureCycleDetector {
                 Collections.reverse(featureCycle);
 
                 // At this point, we have enough information to throw a custom exception, with the biomes and features involved
-                throw new IllegalStateException(buildErrorMessage(nodesToTracebacks, featureCycle));
+                throw Thiocyanate.createException(buildErrorMessage(nodesToTracebacks, featureCycle));
             }
         }
 
@@ -216,7 +219,7 @@ public final class FeatureCycleDetector {
 
     private static String buildErrorMessage(Map<FeatureData, Map<BiomeData, IntSet>> tracebacks, List<FeatureData> cycle) {
         final StringBuilder error = new StringBuilder("""
-                A feature cycle was found.
+                A feature cycle was found!
 
                 Cycle:
                 """);

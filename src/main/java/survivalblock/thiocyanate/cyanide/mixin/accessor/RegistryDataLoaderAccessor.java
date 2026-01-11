@@ -1,8 +1,5 @@
 package survivalblock.thiocyanate.cyanide.mixin.accessor;
 
-import java.util.Optional;
-import java.util.function.Function;
-
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.WritableRegistry;
@@ -12,6 +9,9 @@ import net.minecraft.server.packs.repository.KnownPack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * These exist to minimize the need to copy sections of vanilla code, which raises issues with patches (both Forge and Fabric)
@@ -29,8 +29,10 @@ public interface RegistryDataLoaderAccessor {
         throw new UnsupportedOperationException("Mixin invoker");
     }
 
+    //? if <26 {
     @Invoker("createInfoForNewRegistry")
     static <T> RegistryOps.RegistryInfo<T> thiocyanate$createInfoForNewRegistry(WritableRegistry<T> registry) {
         throw new UnsupportedOperationException("Mixin invoker");
     }
+    //?}
 }

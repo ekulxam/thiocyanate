@@ -11,6 +11,7 @@
     "FabricDataGeneratorMixin",
     "HeightProviderTypeMixin",
     "LegacySinglePoolElementAccessor",
+    "OverworldBiomesAccessor",
     "TrapezoidHeightAccessor"
   ],
   "injectors": {

@@ -9,9 +9,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
-import survivalblock.thiocyanate.Thiocyanate;
-import survivalblock.thiocyanate_test.worldgen.InvalidCodecs;
 import survivalblock.thiocyanate_test.ThiocyanateTestmod;
+import survivalblock.thiocyanate_test.worldgen.InvalidCodecs;
 
 import static survivalblock.thiocyanate_test.ThiocyanateTestmod.*;
 

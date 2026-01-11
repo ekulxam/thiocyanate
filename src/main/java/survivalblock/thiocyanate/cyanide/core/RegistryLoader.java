@@ -1,23 +1,5 @@
 package survivalblock.thiocyanate.cyanide.core;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import net.minecraft.core.HolderLookup;
-import net.minecraft.resources.Identifier;
-import net.minecraft.tags.TagLoader;
-import survivalblock.thiocyanate.Thiocyanate;
-import survivalblock.thiocyanate.cyanide.mixin.accessor.MappedRegistryAccessor;
-import survivalblock.thiocyanate.cyanide.platform.XPlatform;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonParser;
@@ -30,14 +12,18 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.WritableRegistry;
+//? if >=26
+/*import net.minecraft.core.registries.ConcurrentHolderGetter;*/
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.FileToIdConverter;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.resources.RegistryDataLoader.RegistryData;
 import net.minecraft.resources.RegistryOps;
@@ -46,9 +32,30 @@ import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagKey;
+import net.minecraft.tags.TagLoader;
+//? if >=26
+/*import net.minecraft.util.thread.ParallelMapTransform;*/
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import survivalblock.thiocyanate.Thiocyanate;
+import survivalblock.thiocyanate.cyanide.mixin.accessor.MappedRegistryAccessor;
+import survivalblock.thiocyanate.cyanide.platform.XPlatform;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+//? if >=26
+/*import java.util.concurrent.CompletableFuture;*/
+import java.util.concurrent.Executor;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static survivalblock.thiocyanate.cyanide.mixin.accessor.RegistryDataLoaderAccessor.*;
 
@@ -65,63 +72,82 @@ public final class RegistryLoader {
 
     /**
      * @see RegistryDataLoader#load(RegistryDataLoader.LoadingFunction, List, List)
+     * @see RegistryDataLoader#load(RegistryDataLoader.LoaderFactory, List, List, Executor)  
      */
-    public static RegistryAccess.Frozen load(
+    public static /*? <=26 {*/ RegistryAccess.Frozen /*?} else {*/ /*CompletableFuture<RegistryAccess.Frozen>*//*?}*/ load(
         ResourceManager resourceManager,
         List<HolderLookup.RegistryLookup<?>> contextRegistries,
         List<RegistryData<?>> registriesToLoad
+        /*? >=26 {*/ /*, Executor executor *//*?}*/
     ) {
-        final Reporter reporter = new Reporter();
-        final List<Loader<?>> registryLoader = registriesToLoad.stream().<Loader<?>>map(Loader::new).toList();
-        final Map<ResourceKey<? extends Registry<?>>, RegistryOps.RegistryInfo<?>> registryLookup = new IdentityHashMap<>();
-        final RegistryOps.RegistryInfoLookup lookup = new RegistryOps.RegistryInfoLookup() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public <T> Optional<RegistryOps.RegistryInfo<T>> lookup(ResourceKey<? extends Registry<? extends T>> registryKey) {
-                return Optional.ofNullable((RegistryOps.RegistryInfo<T>) registryLookup.get(registryKey));
-            }
-        };
+        //? if >=26 {
+        /*return CompletableFuture.supplyAsync(
+                () -> {
+        *///?}
+                    final Reporter reporter = new Reporter();
+                    final List<Loader<?>> registryLoader = registriesToLoad.stream().<Loader<?>>map(Loader::new).toList();
+                    final Map<ResourceKey<? extends Registry<?>>, RegistryOps.RegistryInfo<?>> registryLookup = new IdentityHashMap<>();
+                    final RegistryOps.RegistryInfoLookup lookup = new RegistryOps.RegistryInfoLookup() {
+                        @Override
+                        @SuppressWarnings("unchecked")
+                        public <T> Optional<RegistryOps.RegistryInfo<T>> lookup(ResourceKey<? extends Registry<? extends T>> registryKey) {
+                            return Optional.ofNullable((RegistryOps.RegistryInfo<T>) registryLookup.get(registryKey));
+                        }
+                    };
 
-        // Trigger Fabric's callback before any loading is complete
-        final Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap = new IdentityHashMap<>(registriesToLoad.size());
-        registryLoader.forEach(loader -> registryMap.put(loader.registry.key(), loader.registry));
-        XPlatform.INSTANCE.postFabricBeforeRegistryLoadEvent(registryMap);
+                    // Trigger Fabric's callback before any loading is complete
+                    final Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap = new IdentityHashMap<>(registriesToLoad.size());
+                    registryLoader.forEach(loader -> registryMap.put(loader.registry.key(), loader.registry));
+                    XPlatform.INSTANCE.postFabricBeforeRegistryLoadEvent(registryMap);
 
-        // Populate lookup with both static registries, and dynamic (datapack) ones
-        // Create new empty registries for the dynamic ones, and record them in the top-level registry map
-        //
-        // Note that we want to use a custom registration lookup for new registries - this allows us to track when elements are being
-        // referenced, and then resolve these references as they get defined, rather than only knowing after the fact what element
-        // was trying to reference something that never got defined.
-        contextRegistries.forEach(entry -> registryLookup.put(entry.key(), thiocyanate$createInfoForContextRegistry(entry)));
-        registryLoader.forEach(entry -> registryLookup.put(entry.data.key(), createNewRegistryInfo(entry.registry, reporter)));
+                    // Populate lookup with both static registries, and dynamic (datapack) ones
+                    // Create new empty registries for the dynamic ones, and record them in the top-level registry map
+                    //
+                    // Note that we want to use a custom registration lookup for new registries - this allows us to track when elements are being
+                    // referenced, and then resolve these references as they get defined, rather than only knowing after the fact what element
+                    // was trying to reference something that never got defined.
 
-        // Load each registry content sequentially
-        registryLoader.forEach(loader -> loadRegistry(resourceManager, lookup, loader, reporter));
+                    contextRegistries.forEach(entry -> registryLookup.put(entry.key(), thiocyanate$createInfoForContextRegistry(entry)));
+                    registryLoader.forEach(entry -> registryLookup.put(entry.data.key(), createNewRegistryInfo(/*? <=26 {*/ thiocyanate$createInfoForNewRegistry(entry.registry) /*?} else {*/ /*entry.createRegistryInfo()*//*?}*/, reporter)));
 
-        // Attempt to freeze registries. This will fail if there are unbound elements in the registry, which we should be able to handle
-        // gracefully, because we know what causes these errors
-        registryLoader.forEach(loader -> freezeRegistry(loader, reporter));
+                    // Load each registry content sequentially
+                    //? if <26
+                    registryLoader.forEach(
+                    //? if >=26 {
+                    /*CompletableFuture<Void> loadCompletions = CompletableFuture.allOf(
+                    registryLoader.stream().map(
+                    *///?}
+                            loader -> loadRegistry(resourceManager, lookup, loader, reporter/*? >=26 {*//*, executor *//*?}*/)
+                    )/*? >=26 {*/ /*.toArray(CompletableFuture[]::new)) *//*?}*/;
 
-        // At this point, we have collected all errors. If any have been raised, we build and print an informative error with the
-        // causes.
-        if (reporter.hasError()) {
-            throw new IllegalStateException(reporter.buildError());
-        }
+                    //? if >=26
+                    /*return loadCompletions.thenApplyAsync(ignored -> {*/
+                        // Attempt to freeze registries. This will fail if there are unbound elements in the registry, which we should be able to handle
+                        // gracefully, because we know what causes these errors
+                        registryLoader.forEach(loader -> freezeRegistry(loader, reporter));
 
-        // Bake registries - everything should be fine at this point
-        final List<? extends WritableRegistry<?>> registries = registryLoader.stream()
-            .map(Loader::registry)
-            .toList();
+                        // At this point, we have collected all errors. If any have been raised, we build and print an informative error with the
+                        // causes.
+                        if (reporter.hasError()) {
+                            throw Thiocyanate.createException(reporter.buildError());
+                        }
 
-        return new RegistryAccess.ImmutableRegistryAccess(registries).freeze();
+                        // Bake registries - everything should be fine at this point
+                        final List<? extends WritableRegistry<?>> registries = registryLoader.stream()
+                                .map(loader -> loader.registry)
+                                .toList();
+
+                        return new RegistryAccess.ImmutableRegistryAccess(registries).freeze();
+        //? if >=26 {
+                    /*}, executor);
+                }).thenCompose(cf -> cf);
+        *///?}
     }
 
     /**
      * @see MappedRegistry#createRegistrationLookup()
      */
-    private static <T> RegistryOps.RegistryInfo<T> createNewRegistryInfo(WritableRegistry<T> registry, Reporter reporter) {
-        final var originalInfo = thiocyanate$createInfoForNewRegistry(registry);
+    private static <T> RegistryOps.RegistryInfo<T> createNewRegistryInfo(RegistryOps.RegistryInfo<T> originalInfo, Reporter reporter) {
         final var originalLookup = originalInfo.getter();
         return new RegistryOps.RegistryInfo<>(originalInfo.owner(), new HolderGetter<>() {
             @Override
@@ -151,14 +177,12 @@ public final class RegistryLoader {
             }
 
             @Override
-            public Optional<HolderSet.Named<T>> get(TagKey<T> tagKey)
-            {
+            public Optional<HolderSet.Named<T>> get(TagKey<T> tagKey) {
                 return originalLookup.get(tagKey);
             }
 
             @Override
-            public HolderSet.Named<T> getOrThrow(TagKey<T> tagKey)
-            {
+            public HolderSet.Named<T> getOrThrow(TagKey<T> tagKey) {
                 return originalLookup.getOrThrow(tagKey);
             }
         }, originalInfo.elementsLifecycle());
@@ -166,101 +190,139 @@ public final class RegistryLoader {
 
     /**
      * @see RegistryDataLoader#loadContentsFromManager
+     * @see RegistryDataLoader.ResourceManagerRegistryLoadTask#load(RegistryOps.RegistryInfoLookup, Executor) 
      */
-    private static <T> void loadRegistry(
+    private static <T> /*? <=26 {*/ void /*?} else {*/ /*CompletableFuture<?>*//*?}*/ loadRegistry(
         ResourceManager resourceManager,
         RegistryOps.RegistryInfoLookup lookup,
         Loader<T> loader,
         Reporter reporter
+        /*? >=26 {*/ /*, Executor executor *//*?}*/
     ) {
         final String registryPath = Registries.elementsDirPath(loader.registry.key());
         final FileToIdConverter converter = FileToIdConverter.json(registryPath);
         final RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, lookup);
+
         final Function<Optional<KnownPack>, RegistrationInfo> infoCache = thiocyanate$getRegistrationInfoCache();
+        //? if <26
         final RegistryReporter registryReporter = reporter.registry(loader.data.key());
 
         // Modify the element codec to add conditions, as per NeoForge's patch
         Decoder<Optional<T>> decoder = XPlatform.INSTANCE.getNeoForgeConditionalCodec(loader.data.elementCodec());
-
+        //? if <26
         for (Map.Entry<Identifier, Resource> entry : converter.listMatchingResources(resourceManager).entrySet()) {
-            final Identifier id = entry.getKey();
-            final ResourceKey<T> key = ResourceKey.create(loader.registry.key(), converter.fileToId(id));
-            final Resource resource = entry.getValue();
-            final RegistrationInfo info = infoCache.apply(resource.knownPackInfo());
+        //? if >=26 {
+        /*return CompletableFuture.supplyAsync(() -> converter.listMatchingResources(resourceManager), executor)
+                .thenCompose(registryResources ->
+                        ParallelMapTransform.schedule(registryResources, (id, resource) -> {
+        *///?}
+                            //? if <26
+                            final Identifier id = entry.getKey();
+                            final ResourceKey<T> key = ResourceKey.create(loader.registry.key(), converter.fileToId(id));
+                            //? if <26
+                            final Resource resource = entry.getValue();
+                            final RegistrationInfo info = infoCache.apply(resource.knownPackInfo());
+                            //? if >=26
+                            /*final RegistryReporter registryReporter = reporter.registry(loader.data.key());*/
 
-            // Populate the unbound reference, as we are able to track any references this element makes
-            reporter.currentReference = new UnboundReference(resource, key);
+                            // Populate the unbound reference, as we are able to track any references this element makes
+                            reporter.currentReference = new UnboundReference(resource, key);
 
-            final JsonElement json;
-            try (Reader reader = resource.openAsReader()) {
-                json = JsonParser.parseReader(reader);
-            } catch (JsonSyntaxException e) {
-                // If the JSON was malformed, we try and extract a line number from the output, and we print the JSON if we can
-                final StringBuilder error = new StringBuilder();
+                            final JsonElement json;
+                            try (Reader reader = resource.openAsReader()) {
+                                json = JsonParser.parseReader(reader);
+                            } catch (JsonSyntaxException e) {
+                                // If the JSON was malformed, we try and extract a line number from the output, and we print the JSON if we can
+                                final StringBuilder error = new StringBuilder();
 
-                // JsonParser.parseReader wraps everything, so grab the cause for the more relevant error
-                error.append("Syntax Error: %s\n".formatted(e.getCause() instanceof MalformedJsonException ? e.getCause().getMessage() : e.getMessage()));
+                                // JsonParser.parseReader wraps everything, so grab the cause for the more relevant error
+                                error.append("Syntax Error: %s\n".formatted(e.getCause() instanceof MalformedJsonException ? e.getCause().getMessage() : e.getMessage()));
 
-                try (Reader reader = resource.openAsReader()) {
-                    final List<String> rawText = IOUtils.readLines(reader);
-                    final Matcher match = PATTERN_LINE.matcher(e.getMessage());
+                                try (Reader reader = resource.openAsReader()) {
+                                    final List<String> rawText = IOUtils.readLines(reader);
+                                    final Matcher match = PATTERN_LINE.matcher(e.getMessage());
 
-                    if (match.find()) {
-                        final int lineNo = Integer.parseInt(match.group(1));
-                        final int columnNo = Integer.parseInt(match.group(2));
+                                    if (match.find()) {
+                                        final int lineNo = Integer.parseInt(match.group(1));
+                                        final int columnNo = Integer.parseInt(match.group(2));
 
-                        final String spacing = " ".repeat(Math.max(columnNo - 2, 0));
-                        final List<String> contextLines = rawText.subList(Math.max(0, lineNo - 5), Math.min(rawText.size(), lineNo));
+                                        final String spacing = " ".repeat(Math.max(columnNo - 2, 0));
+                                        final List<String> contextLines = rawText.subList(Math.max(0, lineNo - 5), Math.min(rawText.size(), lineNo));
 
-                        error.append("  at:\n%s\n%s^\n%shere\n".formatted(
-                            String.join("\n", contextLines),
-                            spacing,
-                            spacing
-                        ));
-                    }
-                } catch (IOException o) {
-                    Thiocyanate.LOGGER.warn("Unable to read raw text", o);
-                }
+                                        error.append("  at:\n%s\n%s^\n%shere\n".formatted(
+                                            String.join("\n", contextLines),
+                                            spacing,
+                                            spacing
+                                        ));
+                                    }
+                                } catch (IOException o) {
+                                    Thiocyanate.LOGGER.warn("Unable to read raw text", o);
+                                }
 
-                registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), error.toString()));
-                continue;
-            } catch (JsonIOException | IOException e) {
-                registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), "IO Error: " + e.getMessage()));
-                continue;
-            }
+                                registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), error.toString()));
+                                /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
+                            } catch (JsonIOException | IOException e) {
+                                registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), "IO Error: " + e.getMessage()));
+                                /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
+                            }
 
-            // Before parsing, consider conditions. Both loaders implement some variant of them.
-            // - Fabric implements conditions as a basic check on the JSON itself
-            // - NeoForge implements conditions using a wrapped decoder
-            //
-            // So, we support both
-            if (XPlatform.INSTANCE.checkFabricConditions(json, key, lookup)) {
-                continue;
-            }
+                            // Before parsing, consider conditions. Both loaders implement some variant of them.
+                            // - Fabric implements conditions as a basic check on the JSON itself
+                            // - NeoForge implements conditions using a wrapped decoder
+                            //
+                            // So, we support both
+                            if (XPlatform.INSTANCE.checkFabricConditions(json, key, lookup)) {
+                                /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
+                            }
 
-            // The optional will be null if NeoForge's conditions fail to pass
-            // In this case, we log the same message, otherwise we register the element
-            final DataResult<Optional<T>> result = decoder.parse(ops, json);
-            result.ifSuccess(candidate ->
-                candidate.ifPresentOrElse(
-                    value -> loader.registry.register(key, value, info),
-                    () -> LOGGER.debug("Skipping loading registry entry {} as its conditions were not met", key)
-                ));
-            result.ifError(error -> registryReporter.loadingErrors.put(key, new LoadingError(
-                resource.sourcePackId(),
-                "Parsing Error: " + error.message()
-            )));
+                            // The optional will be null if NeoForge's conditions fail to pass
+                            // In this case, we log the same message, otherwise we register the element
+                            final DataResult<Optional<T>> result = decoder.parse(ops, json);
+        //? if >=26 {
+                            /*return new AlmostRegistered<>(key, result, info, registryReporter, resource);
+                        }, executor)).thenAcceptAsync(loadedEntries -> {
+                            synchronized (loader.writeLock) {
+                                loadedEntries.forEach((identifier, almostRegistered) -> {
+                                    ResourceKey<T> key = almostRegistered.key;
+                                    DataResult<Optional<T>> result = almostRegistered.result;
+                                    RegistrationInfo info = almostRegistered.info;
+                                    RegistryReporter registryReporter = almostRegistered.reporter;
+        *///?}
+                                    result.ifSuccess(candidate ->
+                                            candidate.ifPresentOrElse(
+                                                    value -> loader.registry.register(key, value, info),
+                                                    () -> LOGGER.debug("Skipping loading registry entry {} as its conditions were not met", key)
+                                            ));
+                                    result.ifError(error -> registryReporter.loadingErrors.put(key, new LoadingError(
+                                            /*? <=26 {*/ resource.sourcePackId() /*?} else {*/ /*almostRegistered.sourcePackId*//*?}*/,
+                                            "Parsing Error: " + error.message()
+                                    )));
 
-            // In addition to registering the object, we need to remove it from a list of possibly unbound references
-            // This prevents us from hanging on to various other references when we know the object exists
-            //
-            // Note that we do this **even if there was a loading error**. Why? Because if there was a loading error,
-            // we would already have a more accurate error than "unbound holder", because we know it was at least a file
-            // we were trying to load in the first place.
-            reporter.unboundReferences.remove(key);
-            reporter.currentReference = null;
+                                    // In addition to registering the object, we need to remove it from a list of possibly unbound references
+                                    // This prevents us from hanging on to various other references when we know the object exists
+                                    //
+                                    // Note that we do this **even if there was a loading error**. Why? Because if there was a loading error,
+                                    // we would already have a more accurate error than "unbound holder", because we know it was at least a file
+                                    // we were trying to load in the first place.
+                                    reporter.unboundReferences.remove(key);
+                                    reporter.currentReference = null;
+        //? if <26
         }
+        //? if >=26 {
+                                /*});
+                            }
+                            var key = loader.registry.key();
+                            TagLoader.ElementLookup<Holder<T>> tagElementLookup = TagLoader.ElementLookup.fromGetters(
+                                    key, loader.concurrentRegistrationGetter, loader.registry
+                            );
+                            Map<TagKey<T>, List<Holder<T>>> pendingTags = TagLoader.loadTagsForRegistry(resourceManager, key, tagElementLookup);
+                            synchronized (loader.writeLock) {
+                                loader.registry.bindTags(pendingTags);
+                            }
+                        }, executor);
+        *///?}
 
+        //? if <26
         TagLoader.loadTagsForRegistry(resourceManager, loader.registry);
     }
 
@@ -337,10 +399,25 @@ public final class RegistryLoader {
         return "  at '%s' defined in '%s'".formatted(prettyId(key), sourcePackId);
     }
 
-    record Loader<T>(RegistryData<T> data, WritableRegistry<T> registry) {
+    static class Loader<T> {
+        final RegistryData<T> data;
+        final WritableRegistry<T> registry;
+        //? if >=26 {
+        /*final ConcurrentHolderGetter<T> concurrentRegistrationGetter;
+        final Object writeLock = new Object();
+        *///?}
+
         Loader(RegistryData<T> data) {
-            this(data, new MappedRegistry<>(data.key(), Lifecycle.stable()));
+            this.data = data;
+            this.registry = new MappedRegistry<>(data.key(), Lifecycle.stable());
+            /*? >=26 {*/ /*this.concurrentRegistrationGetter = new ConcurrentHolderGetter<>(this.writeLock, this.registry.createRegistrationLookup()); *//*?}*/
         }
+
+        //? if >=26 {
+        /*public RegistryOps.RegistryInfo<T> createRegistryInfo() {
+            return new RegistryOps.RegistryInfo<>(this.registry, this.concurrentRegistrationGetter, this.registry.registryLifecycle());
+        }
+        *///?}
     }
 
     static class Reporter {
@@ -361,7 +438,7 @@ public final class RegistryLoader {
         String buildError() {
             final StringBuilder builder = new StringBuilder();
 
-            builder.append("\n\n===== An error occurred loading registries =====\n\n");
+            builder.append("registry loading\n\n===== An error occurred loading registries =====\n\n");
             errors.forEach((key, reporter) -> {
                 if (reporter.hasError()) {
                     reporter.buildError(builder, key);
@@ -409,4 +486,17 @@ public final class RegistryLoader {
 
     record UnboundReference(Resource resource, ResourceKey<?> key) {}
     record LoadingError(String sourcePackId, String message) {}
+
+    //? if >=26 {
+    /*record AlmostRegistered<T>(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, String sourcePackId) {
+
+        AlmostRegistered(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
+            this(key, result, info, reporter, resource.sourcePackId());
+        }
+
+        static <T> AlmostRegistered<T> error(ResourceKey<T> key, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
+            return new AlmostRegistered<>(key, DataResult.error(() -> ""), info, reporter, resource);
+        }
+    }
+    *///?}
 }

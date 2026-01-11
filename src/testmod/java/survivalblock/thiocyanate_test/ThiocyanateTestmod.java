@@ -16,7 +16,6 @@ import net.minecraft.data.worldgen.BiomeDefaultFeatures;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.Carvers;
 import net.minecraft.data.worldgen.ProcessorLists;
-import net.minecraft.data.worldgen.biome.OverworldBiomes;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.data.worldgen.features.OreFeatures;
 import net.minecraft.data.worldgen.placement.MiscOverworldPlacements;
@@ -51,6 +50,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import survivalblock.thiocyanate_test.mixin.LegacySinglePoolElementAccessor;
+import survivalblock.thiocyanate_test.mixin.OverworldBiomesAccessor;
 import survivalblock.thiocyanate_test.worldgen.NamedFeatureConfiguration;
 
 import java.nio.file.Path;
@@ -63,6 +63,7 @@ public class ThiocyanateTestmod implements ModInitializer {
 	public static final String MOD_ID = "thiocyanate_test";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+    public static final PackActivationType PACK_ACTIVATION_TYPE = PackActivationType.NORMAL;
     public static final Identifier FEATURE_CYCLE_PACK_ID = Identifier.fromNamespaceAndPath(MOD_ID, "feature_cycle");
     public static final Identifier TEST_PACK_ID = Identifier.fromNamespaceAndPath(MOD_ID, "test");
 
@@ -141,8 +142,8 @@ public class ThiocyanateTestmod implements ModInitializer {
                 }
             };
 
-            boolean featureCycle = registerBuiltinDataPack(FEATURE_CYCLE_PACK_ID, trueGenerated, PackActivationType.DEFAULT_ENABLED);
-            boolean test = registerBuiltinDataPack(TEST_PACK_ID, trueGenerated, PackActivationType.DEFAULT_ENABLED);
+            boolean featureCycle = registerBuiltinDataPack(FEATURE_CYCLE_PACK_ID, trueGenerated, PACK_ACTIVATION_TYPE);
+            boolean test = registerBuiltinDataPack(TEST_PACK_ID, trueGenerated, PACK_ACTIVATION_TYPE);
             if (!featureCycle || !test) {
                 LOGGER.warn("Some datapacks were not properly loaded! FeatureCycle: {}, Test: {}", featureCycle, test);
             }
@@ -267,7 +268,7 @@ public class ThiocyanateTestmod implements ModInitializer {
 
         Supplier<BiomeGenerationSettings.Builder> defaultFeatureCarverFactory = () -> {
             BiomeGenerationSettings.Builder defaultFeatureCarver = new BiomeGenerationSettings.Builder(placedFeatures, configuredFeatures);
-            OverworldBiomes.globalOverworldGeneration(defaultFeatureCarver);
+            OverworldBiomesAccessor.thiocyanate_test$invokeGlobalOverworldGeneration(defaultFeatureCarver);
             BiomeDefaultFeatures.addDefaultOres(defaultFeatureCarver);
             BiomeDefaultFeatures.addDefaultFlowers(defaultFeatureCarver);
             BiomeDefaultFeatures.addDefaultMushrooms(defaultFeatureCarver);
@@ -284,35 +285,35 @@ public class ThiocyanateTestmod implements ModInitializer {
 
         context.register(
                 Biomes.OCEAN,
-                OverworldBiomes.baseOcean()
+                OverworldBiomesAccessor.thiocyanate_test$invokeBaseOcean()
                         .generationSettings(oceanFeatureCarver.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
         context.register(
                 Biomes.PLAINS,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(plainsFeatureCarver.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
         context.register(
                 BROKEN_FEATURE,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(brokenFeatureCarver.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
         context.register(
                 INVALID_PRECIPITATION,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(defaultFeatureCarverFactory.get().build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
         context.register(
                 INVALID_TEMPERATURE_MODIFIER,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(defaultFeatureCarverFactory.get().build())
                         .mobSpawnSettings(emptySpawning)
                         .temperatureAdjustment(Biome.TemperatureModifier.FROZEN)
@@ -320,25 +321,29 @@ public class ThiocyanateTestmod implements ModInitializer {
         );
         context.register(
                 THE_VOID,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(defaultFeatureCarverFactory.get().build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
         context.register(
                 UNKNOWN_CARVER,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(unknownCarvers.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
         context.register(
                 UNKNOWN_FEATURES,
-                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                baseBiome(0.5F, 0.5F)
                         .generationSettings(unknownFeatures.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
+    }
+
+    public static Biome.BiomeBuilder baseBiome(float temperature, float downfall) {
+        return OverworldBiomesAccessor.thiocyanate_test$invokeBaseBiome(temperature, downfall);
     }
 
     public static void bootstrapInvalidProcessor(BootstrapContext<StructureProcessorList> context) {

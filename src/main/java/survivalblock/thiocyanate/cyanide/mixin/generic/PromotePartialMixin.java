@@ -1,7 +1,5 @@
 package survivalblock.thiocyanate.cyanide.mixin.generic;
 
-import java.util.function.Consumer;
-
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.serialization.Codec;
@@ -9,7 +7,8 @@ import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+
+import java.util.function.Consumer;
 
 /**
  * Wide-targeting mixin to remove references to {@link Codec#promotePartial(Consumer)}. This is a terrible

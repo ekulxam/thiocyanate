@@ -1,18 +1,17 @@
 package survivalblock.thiocyanate.cyanide.mixin;
 
-import java.util.List;
-import java.util.function.Function;
-
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.biome.FeatureSorter;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import survivalblock.thiocyanate.cyanide.core.FeatureCycleDetector;
 import survivalblock.thiocyanate.cyanide.core.MixinHooks;
+
+import java.util.List;
+import java.util.function.Function;
 
 @Mixin(FeatureSorter.class)
 public abstract class FeatureSorterMixin {

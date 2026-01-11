@@ -6,7 +6,6 @@ import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(CreateWorldScreen.class)
 public abstract class CreateWorldScreenMixin {
