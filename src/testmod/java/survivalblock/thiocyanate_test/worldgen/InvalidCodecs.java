@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.heightproviders.TrapezoidHeight;
@@ -44,4 +45,6 @@ public interface InvalidCodecs {
                     )
                     .apply(instance, (min, max, plateau) -> TrapezoidHeight.of(VerticalAnchor.absolute(min), max, plateau))
     );
+
+    Codec<Biome.TemperatureModifier> PEACHY_TEMPERATURE_MODIFIER = Codec.STRING.xmap(Biome.TemperatureModifier::valueOf, temperatureModifier -> temperatureModifier == Biome.TemperatureModifier.NONE ? temperatureModifier.getSerializedName() : "peachy");
 }

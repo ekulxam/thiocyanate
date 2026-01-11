@@ -17,7 +17,6 @@ import java.util.function.BiConsumer;
 
 public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
 
-    public static volatile boolean wreckTrapezoids = false;
 
     private final Set<ResourceKey<T>> keys = new HashSet<>();
     private final String directoryName;
@@ -31,14 +30,14 @@ public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
     @Override
     protected void configure(BiConsumer<Identifier, T> provider, HolderLookup.Provider lookup) {
         this.keys.forEach(key -> {
-            if (key == ThiocyanateTestmod.BROKEN_ORE_TIN) {
-                wreckTrapezoids = true;
+            if (ThiocyanateTestDataGenerator.unstableKey(key)) {
+                ThiocyanateTestDataGenerator.tellMinecraftThatEverythingIsFine = true;
             }
             provider.accept(
                     key.identifier(),
                     lookup.getOrThrow(key).value()
             );
-            wreckTrapezoids = false;
+            ThiocyanateTestDataGenerator.tellMinecraftThatEverythingIsFine = false;
         });
     }
 

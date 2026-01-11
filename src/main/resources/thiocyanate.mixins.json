@@ -1,8 +1,17 @@
 {
   "required": true,
-  "package": "survivalblock.thiocyanate.mixin",
+  "package": "survivalblock.thiocyanate.cyanide.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "FeatureSorterMixin",
+    "FloatProviderMixin",
+    "IntProviderMixin",
+    "RegistryDataLoaderMixin",
+    "RegistryMixin",
+    "accessor.MappedRegistryAccessor",
+    "accessor.RegistryDataLoaderAccessor",
+    "generic.FieldOfMixin",
+    "generic.PromotePartialMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -11,5 +20,6 @@
     "requireAnnotations": true
   },
   "client": [
+    "client.CreateWorldScreenMixin"
   ]
 }

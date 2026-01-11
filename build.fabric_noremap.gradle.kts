@@ -56,6 +56,12 @@ stonecutter {
         direction = eval(minecraft, ">1.21.10")
         replace("ResourceLocation", "Identifier")
     }
+    val loader = ("${project.property("deps.compatibleLoaders")}".split(", ").toList())[0]
+    constants.match(
+        loader,
+        "fabric",
+        "neoforge"
+    )
 }
 
 fletchingTable {

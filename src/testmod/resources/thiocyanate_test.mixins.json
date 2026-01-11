@@ -1,9 +1,12 @@
 {
   "required": true,
   "package": "survivalblock.thiocyanate_test.mixin",
+  "plugin": "survivalblock.thiocyanate_test.ThiocyanateTestMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "BiomeDataMixin",
+    "BiomeMixin",
+    "BiomeMixin$TemperatureModifierMixin",
     "CountPlacementMixin",
     "FabricDataGeneratorMixin",
     "HeightProviderTypeMixin",

@@ -6,6 +6,7 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.BiomeDefaultFeatures;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.Carvers;
 import net.minecraft.data.worldgen.ProcessorLists;
@@ -16,15 +17,23 @@ import net.minecraft.data.worldgen.placement.MiscOverworldPlacements;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.valueproviders.UniformFloat;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
+import net.minecraft.world.level.levelgen.carver.CarverDebugSettings;
+import net.minecraft.world.level.levelgen.carver.CaveCarverConfiguration;
 import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
+import net.minecraft.world.level.levelgen.carver.WorldCarver;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.level.levelgen.heightproviders.UniformHeight;
 import net.minecraft.world.level.levelgen.placement.BiomeFilter;
 import net.minecraft.world.level.levelgen.placement.CountPlacement;
 import net.minecraft.world.level.levelgen.placement.HeightRangePlacement;
@@ -40,6 +49,7 @@ import survivalblock.thiocyanate_test.worldgen.NamedFeatureConfiguration;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class ThiocyanateTestmod implements ModInitializer {
 	public static final String MOD_ID = "thiocyanate_testmod";
@@ -54,11 +64,13 @@ public class ThiocyanateTestmod implements ModInitializer {
     public static final ResourceKey<ConfiguredFeature<?, ?>> INVALID_JSON = ofConfiguredFeature(cyanide("invalid_json"));
     public static final ResourceKey<ConfiguredFeature<?, ?>> MISSING_FEATURE = ofConfiguredFeature(cyanide("missing_feature"));
 
+    public static final ResourceKey<ConfiguredWorldCarver<?>> BEEG_CAVE_CARVER = ResourceKey.create(Registries.CONFIGURED_CARVER, Identifier.withDefaultNamespace("very_beeg_cave"));
+    public static final ResourceKey<PlacedFeature> MUD_LAKE = ofPlacedFeature(Identifier.withDefaultNamespace("mud_lake"));
     public static final ResourceKey<Biome> BROKEN_FEATURE = poisonWorld("broken_feature");
     public static final ResourceKey<Biome> INVALID_PRECIPITATION = poisonWorld("invalid_precipitation");
     public static final ResourceKey<Biome> INVALID_TEMPERATURE_MODIFIER = poisonWorld("invalid_temperature_modifier");
     public static final ResourceKey<Biome> THE_VOID = poisonWorld("the_void");
-    public static final ResourceKey<Biome> UKNOWN_CARVER = poisonWorld("unknown_carver");
+    public static final ResourceKey<Biome> UNKNOWN_CARVER = poisonWorld("unknown_carver");
     public static final ResourceKey<Biome> UNKNOWN_FEATURES = poisonWorld("unknown_features");
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> INVALID_CONFIGURED_FEATURE_FEATURE = ofConfiguredFeature(cyanide("invalid_configured_feature"));
@@ -140,6 +152,28 @@ public class ThiocyanateTestmod implements ModInitializer {
                 )
         );
         PlacementUtils.register(context, MISSING_CONFIGURED_FEATURE, configuredFeatures.getOrThrow(MISSING_FEATURE));
+
+        PlacementUtils.register(context, MUD_LAKE, invalidConfiguredFeature);
+    }
+
+    public static void bootstrapCarvers(BootstrapContext<ConfiguredWorldCarver<?>> context) {
+        HolderGetter<Block> blocks = context.lookup(Registries.BLOCK);
+
+        context.register(BEEG_CAVE_CARVER, WorldCarver.CAVE
+                .configured(
+                        new CaveCarverConfiguration(
+                                0.15F,
+                                UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(180)),
+                                UniformFloat.of(0.1F, 0.9F),
+                                VerticalAnchor.aboveBottom(8),
+                                CarverDebugSettings.of(false, Blocks.CRIMSON_BUTTON.defaultBlockState()),
+                                blocks.getOrThrow(BlockTags.OVERWORLD_CARVER_REPLACEABLES),
+                                UniformFloat.of(0.7F, 1.4F),
+                                UniformFloat.of(0.8F, 1.3F),
+                                UniformFloat.of(-1.0F, -0.4F)
+                        )
+                )
+        );
     }
 
     public static void bootstrapBiomes(BootstrapContext<Biome> context) {
@@ -165,17 +199,77 @@ public class ThiocyanateTestmod implements ModInitializer {
                 .addFeature(GenerationStep.Decoration.RAW_GENERATION, MiscOverworldPlacements.LAKE_LAVA_SURFACE)
                 .addFeature(GenerationStep.Decoration.RAW_GENERATION, NOOP_3);
 
+        Supplier<BiomeGenerationSettings.Builder> defaultFeatureCarverFactory = () -> {
+            BiomeGenerationSettings.Builder defaultFeatureCarver = new BiomeGenerationSettings.Builder(placedFeatures, configuredFeatures);
+            OverworldBiomes.globalOverworldGeneration(defaultFeatureCarver);
+            BiomeDefaultFeatures.addDefaultOres(defaultFeatureCarver);
+            BiomeDefaultFeatures.addDefaultFlowers(defaultFeatureCarver);
+            BiomeDefaultFeatures.addDefaultMushrooms(defaultFeatureCarver);
+            BiomeDefaultFeatures.addDefaultExtraVegetation(defaultFeatureCarver, true);
+            return defaultFeatureCarver;
+        };
+
+        BiomeGenerationSettings.Builder brokenFeatureCarver = defaultFeatureCarverFactory.get().addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, BROKEN_ORE_COPPER);
+
+        BiomeGenerationSettings.Builder unknownCarvers = defaultFeatureCarverFactory.get().addCarver(BEEG_CAVE_CARVER);
+        BiomeGenerationSettings.Builder unknownFeatures = defaultFeatureCarverFactory.get().addFeature(GenerationStep.Decoration.LAKES, MUD_LAKE);
+
         MobSpawnSettings emptySpawning = new MobSpawnSettings.Builder().build();
 
-        context.register(Biomes.OCEAN,
+        context.register(
+                Biomes.OCEAN,
                 OverworldBiomes.baseOcean()
                         .generationSettings(oceanFeatureCarver.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
-        context.register(Biomes.PLAINS,
+        context.register(
+                Biomes.PLAINS,
                 OverworldBiomes.baseBiome(0.5F, 0.5F)
                         .generationSettings(plainsFeatureCarver.build())
+                        .mobSpawnSettings(emptySpawning)
+                        .build()
+        );
+        context.register(
+                BROKEN_FEATURE,
+                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                        .generationSettings(brokenFeatureCarver.build())
+                        .mobSpawnSettings(emptySpawning)
+                        .build()
+        );
+        context.register(
+                INVALID_PRECIPITATION,
+                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                        .generationSettings(defaultFeatureCarverFactory.get().build())
+                        .mobSpawnSettings(emptySpawning)
+                        .build()
+        );
+        context.register(
+                INVALID_TEMPERATURE_MODIFIER,
+                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                        .generationSettings(defaultFeatureCarverFactory.get().build())
+                        .mobSpawnSettings(emptySpawning)
+                        .temperatureAdjustment(Biome.TemperatureModifier.FROZEN)
+                        .build()
+        );
+        context.register(
+                THE_VOID,
+                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                        .generationSettings(defaultFeatureCarverFactory.get().build())
+                        .mobSpawnSettings(emptySpawning)
+                        .build()
+        );
+        context.register(
+                UNKNOWN_CARVER,
+                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                        .generationSettings(unknownCarvers.build())
+                        .mobSpawnSettings(emptySpawning)
+                        .build()
+        );
+        context.register(
+                UNKNOWN_FEATURES,
+                OverworldBiomes.baseBiome(0.5F, 0.5F)
+                        .generationSettings(unknownFeatures.build())
                         .mobSpawnSettings(emptySpawning)
                         .build()
         );
