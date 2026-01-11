@@ -1,6 +1,7 @@
 import org.gradle.jvm.tasks.Jar
 import java.io.BufferedReader
 import java.io.FileReader
+import java.util.Locale
 
 plugins {
     id("net.fabricmc.fabric-loom-remap")
@@ -131,9 +132,11 @@ tasks.register("autoVersionChangelog") {
 }
 
 loom {
-    runConfigs.all {
-        ideConfigGenerated(true)
-        runDir = "../../run"
+    runConfigs.matching {
+        conf -> !conf.name.lowercase(Locale.ROOT).contains("gametest")
+    }.forEach { it ->
+        it.ideConfigGenerated(true)
+        it.runDir = "../../run"
     }
 
     runConfigs["client"].apply {
