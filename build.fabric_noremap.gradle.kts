@@ -68,7 +68,7 @@ fletchingTable {
     mixins.create("main") {
         // Default matches the default value in the annotation
         mixin("default", "${project.property("archives_base_name")}.mixins.json") {
-            env("CLIENT", "survivalblock.thiocyanate.mixin.client")
+            env("CLIENT", "survivalblock.thiocyanate.cyanide.mixin.client")
         }
     }
     mixins.all {
@@ -105,17 +105,19 @@ tasks.register("autoVersionChangelog") {
         val changelog = File("changelog.md")
         val reader = BufferedReader(FileReader(changelog))
         val lines = reader.readLines().toMutableList()
-        val title = "Thiocyanate ${project.property("mod_version")}"
-        lines[0] = title
-        changelog.bufferedWriter().use { writer ->
-            for (i in 0..<lines.size) {
-                writer.write(lines[i])
-                if (i != lines.size - 1) {
-                    writer.newLine()
+        if (!lines.isEmpty()) {
+            val title = "Thiocyanate ${project.property("mod_version")}"
+            lines[0] = title
+            changelog.bufferedWriter().use { writer ->
+                for (i in 0..<lines.size) {
+                    writer.write(lines[i])
+                    if (i != lines.size - 1) {
+                        writer.newLine()
+                    }
                 }
             }
+            println("Changelog header successfully replaced as $title")
         }
-        println("Changelog header successfully replaced as $title")
     }
 }
 
