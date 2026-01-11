@@ -5,43 +5,41 @@ import com.mojang.datafixers.util.Pair;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
-import net.minecraft.core.HolderOwner;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.Carvers;
 import net.minecraft.data.worldgen.ProcessorLists;
 import net.minecraft.data.worldgen.biome.OverworldBiomes;
 import net.minecraft.data.worldgen.features.FeatureUtils;
+import net.minecraft.data.worldgen.features.OreFeatures;
 import net.minecraft.data.worldgen.placement.MiscOverworldPlacements;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.placement.BiomeFilter;
+import net.minecraft.world.level.levelgen.placement.CountPlacement;
+import net.minecraft.world.level.levelgen.placement.HeightRangePlacement;
+import net.minecraft.world.level.levelgen.placement.InSquarePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.pools.EmptyPoolElement;
-import net.minecraft.world.level.levelgen.structure.pools.LegacySinglePoolElement;
-import net.minecraft.world.level.levelgen.structure.pools.SinglePoolElement;
-import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import survivalblock.thiocyanate_test.mixin.LegacySinglePoolElementAccessor;
+import survivalblock.thiocyanate_test.worldgen.NamedFeatureConfiguration;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public class ThiocyanateTestmod implements ModInitializer {
 	public static final String MOD_ID = "thiocyanate_testmod";
@@ -63,6 +61,7 @@ public class ThiocyanateTestmod implements ModInitializer {
     public static final ResourceKey<Biome> UKNOWN_CARVER = poisonWorld("unknown_carver");
     public static final ResourceKey<Biome> UNKNOWN_FEATURES = poisonWorld("unknown_features");
 
+    public static final ResourceKey<ConfiguredFeature<?, ?>> INVALID_CONFIGURED_FEATURE_FEATURE = ofConfiguredFeature(cyanide("invalid_configured_feature"));
     public static final ResourceKey<PlacedFeature> ANOTHER_MISSING_REFERENCE = placePoison("another_missing_reference");
     public static final ResourceKey<PlacedFeature> BROKEN_ORE_COPPER = placePoison("broken_ore_copper");
     public static final ResourceKey<PlacedFeature> BROKEN_ORE_TIN = placePoison("broken_ore_tin");
@@ -104,8 +103,9 @@ public class ThiocyanateTestmod implements ModInitializer {
     public static void bootstrapConfiguredFeatures(BootstrapContext<ConfiguredFeature<? ,?>> context) {
         FeatureUtils.register(context, NO_OP, Feature.NO_OP);
 
-        FeatureUtils.register(context, INVALID_JSON, NamedFeatureConfiguration.Feature.INSTANCE, new NamedFeatureConfiguration("value", false));
-        FeatureUtils.register(context, MISSING_FEATURE, new NamedFeatureConfiguration.Feature(Identifier.withDefaultNamespace("not_a_real_feature")), new NamedFeatureConfiguration("", true));
+        FeatureUtils.register(context, INVALID_JSON, NamedFeatureConfiguration.Feature.INSTANCE, new NamedFeatureConfiguration("value"));
+        FeatureUtils.register(context, MISSING_FEATURE, new NamedFeatureConfiguration.Feature(Identifier.withDefaultNamespace("not_a_real_feature")), new NamedFeatureConfiguration(""));
+        FeatureUtils.register(context, INVALID_CONFIGURED_FEATURE_FEATURE, Feature.NO_OP);
     }
 
     public static void bootstrapPlacedFeatures(BootstrapContext<PlacedFeature> context) {
@@ -114,6 +114,32 @@ public class ThiocyanateTestmod implements ModInitializer {
         PlacementUtils.register(context, NOOP_1, noop, List.of());
         PlacementUtils.register(context, NOOP_2, noop, List.of());
         PlacementUtils.register(context, NOOP_3, noop, List.of());
+
+        Holder<ConfiguredFeature<?, ?>> invalidConfiguredFeature = configuredFeatures.getOrThrow(INVALID_CONFIGURED_FEATURE_FEATURE);
+
+        PlacementUtils.register(context, ANOTHER_MISSING_REFERENCE, invalidConfiguredFeature);
+        PlacementUtils.register(context, INVALID_CONFIGURED_FEATURE, invalidConfiguredFeature);
+        PlacementUtils.register(context,
+                BROKEN_ORE_COPPER,
+                configuredFeatures.getOrThrow(OreFeatures.ORE_COPPPER_SMALL),
+                List.of(
+                        CountPlacement.of(-1),
+                        InSquarePlacement.spread(),
+                        HeightRangePlacement.triangle(VerticalAnchor.absolute(-16), VerticalAnchor.absolute(112)),
+                        BiomeFilter.biome()
+                )
+        );
+        PlacementUtils.register(context,
+                BROKEN_ORE_TIN,
+                configuredFeatures.getOrThrow(OreFeatures.ORE_COPPPER_SMALL),
+                List.of(
+                        CountPlacement.of(-1),
+                        InSquarePlacement.spread(),
+                        HeightRangePlacement.triangle(VerticalAnchor.absolute(3), VerticalAnchor.absolute(112)),
+                        BiomeFilter.biome()
+                )
+        );
+        PlacementUtils.register(context, MISSING_CONFIGURED_FEATURE, configuredFeatures.getOrThrow(MISSING_FEATURE));
     }
 
     public static void bootstrapBiomes(BootstrapContext<Biome> context) {

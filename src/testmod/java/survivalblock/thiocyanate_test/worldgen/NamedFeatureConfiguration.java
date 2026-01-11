@@ -1,20 +1,13 @@
-package survivalblock.thiocyanate_test;
+package survivalblock.thiocyanate_test.worldgen;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 
-public record NamedFeatureConfiguration(String name, boolean empty) implements FeatureConfiguration {
+public record NamedFeatureConfiguration(String name) implements FeatureConfiguration {
 
-    public static final Codec<NamedFeatureConfiguration> CODEC = RecordCodecBuilder.create(
-            instance -> instance.group(
-                            Codec.STRING.fieldOf("name").forGetter(nfc -> nfc.name),
-                            Codec.BOOL.fieldOf("empty").forGetter(nfc -> nfc.empty)
-                    )
-                    .apply(instance, NamedFeatureConfiguration::new)
-    );
+    public static final Codec<NamedFeatureConfiguration> CODEC = Codec.STRING.xmap(NamedFeatureConfiguration::new, nfc -> nfc.name);
 
     public static class Feature extends net.minecraft.world.level.levelgen.feature.Feature<NamedFeatureConfiguration> {
 
@@ -37,6 +30,11 @@ public record NamedFeatureConfiguration(String name, boolean empty) implements F
 
         public Identifier id() {
             return this.id;
+        }
+
+        @Override
+        public String toString() {
+            return this.id.toString();
         }
     }
 }

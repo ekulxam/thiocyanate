@@ -4,8 +4,11 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "BiomeDataMixin",
+    "CountPlacementMixin",
     "FabricDataGeneratorMixin",
-    "LegacySinglePoolElementAccessor"
+    "HeightProviderTypeMixin",
+    "LegacySinglePoolElementAccessor",
+    "TrapezoidHeightAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

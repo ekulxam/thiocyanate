@@ -7,6 +7,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import survivalblock.thiocyanate_test.ThiocyanateTestmod;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,6 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
+
+    public static volatile boolean wreckTrapezoids = false;
 
     private final Set<ResourceKey<T>> keys = new HashSet<>();
     private final String directoryName;
@@ -27,12 +30,16 @@ public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
 
     @Override
     protected void configure(BiConsumer<Identifier, T> provider, HolderLookup.Provider lookup) {
-        this.keys.forEach(key ->
-                provider.accept(
-                        key.identifier(),
-                        lookup.getOrThrow(key).value()
-                )
-        );
+        this.keys.forEach(key -> {
+            if (key == ThiocyanateTestmod.BROKEN_ORE_TIN) {
+                wreckTrapezoids = true;
+            }
+            provider.accept(
+                    key.identifier(),
+                    lookup.getOrThrow(key).value()
+            );
+            wreckTrapezoids = false;
+        });
     }
 
     @Override

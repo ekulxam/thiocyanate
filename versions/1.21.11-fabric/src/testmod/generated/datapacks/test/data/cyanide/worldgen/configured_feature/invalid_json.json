@@ -1,9 +1,6 @@
 {
   "type": "minecraft:no_op",
   "config": {
-    "key": {
-      "empty": false,
-      "name": "value"
-    }
+    "key": "value"
   }
 }
