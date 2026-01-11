@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
+@SuppressWarnings("DataFlowIssue")
 public class ThiocyanateTestMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String s) {
@@ -19,7 +20,7 @@ public class ThiocyanateTestMixinPlugin implements IMixinConfigPlugin {
     }
 
     @Override
-    public boolean shouldApplyMixin(String s, String s1) {
+    public boolean shouldApplyMixin(String mixinClassName, String targetClassName) {
         return FabricDataGenHelper.ENABLED;
     }
 

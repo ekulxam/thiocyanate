@@ -12,7 +12,10 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagLoader;
+import survivalblock.thiocyanate.Thiocyanate;
 import survivalblock.thiocyanate.cyanide.mixin.accessor.MappedRegistryAccessor;
 import survivalblock.thiocyanate.cyanide.platform.XPlatform;
 import com.google.gson.JsonElement;
@@ -65,11 +68,11 @@ public final class RegistryLoader {
      */
     public static RegistryAccess.Frozen load(
         ResourceManager resourceManager,
-        RegistryAccess registryAccess,
-        List<RegistryData<?>> registryData
+        List<HolderLookup.RegistryLookup<?>> contextRegistries,
+        List<RegistryData<?>> registriesToLoad
     ) {
         final Reporter reporter = new Reporter();
-        final List<Loader<?>> registryLoader = registryData.stream().<Loader<?>>map(Loader::new).toList();
+        final List<Loader<?>> registryLoader = registriesToLoad.stream().<Loader<?>>map(Loader::new).toList();
         final Map<ResourceKey<? extends Registry<?>>, RegistryOps.RegistryInfo<?>> registryLookup = new IdentityHashMap<>();
         final RegistryOps.RegistryInfoLookup lookup = new RegistryOps.RegistryInfoLookup() {
             @Override
@@ -80,7 +83,7 @@ public final class RegistryLoader {
         };
 
         // Trigger Fabric's callback before any loading is complete
-        final Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap = new IdentityHashMap<>(registryData.size());
+        final Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap = new IdentityHashMap<>(registriesToLoad.size());
         registryLoader.forEach(loader -> registryMap.put(loader.registry.key(), loader.registry));
         XPlatform.INSTANCE.postFabricBeforeRegistryLoadEvent(registryMap);
 
@@ -90,11 +93,11 @@ public final class RegistryLoader {
         // Note that we want to use a custom registration lookup for new registries - this allows us to track when elements are being
         // referenced, and then resolve these references as they get defined, rather than only knowing after the fact what element
         // was trying to reference something that never got defined.
-        registryAccess.registries().forEach(entry -> registryLookup.put(entry.key(), invoke$createInfoForContextRegistry(entry.value())));
+        contextRegistries.forEach(entry -> registryLookup.put(entry.key(), thiocyanate$createInfoForContextRegistry(entry)));
         registryLoader.forEach(entry -> registryLookup.put(entry.data.key(), createNewRegistryInfo(entry.registry, reporter)));
 
         // Load each registry content sequentially
-        registryLoader.forEach(loader -> loadRegistry(resourceManager, registryAccess, lookup, loader, reporter));
+        registryLoader.forEach(loader -> loadRegistry(resourceManager, lookup, loader, reporter));
 
         // Attempt to freeze registries. This will fail if there are unbound elements in the registry, which we should be able to handle
         // gracefully, because we know what causes these errors
@@ -118,7 +121,7 @@ public final class RegistryLoader {
      * @see MappedRegistry#createRegistrationLookup()
      */
     private static <T> RegistryOps.RegistryInfo<T> createNewRegistryInfo(WritableRegistry<T> registry, Reporter reporter) {
-        final var originalInfo = invoke$createInfoForNewRegistry(registry);
+        final var originalInfo = thiocyanate$createInfoForNewRegistry(registry);
         final var originalLookup = originalInfo.getter();
         return new RegistryOps.RegistryInfo<>(originalInfo.owner(), new HolderGetter<>() {
             @Override
@@ -166,7 +169,6 @@ public final class RegistryLoader {
      */
     private static <T> void loadRegistry(
         ResourceManager resourceManager,
-        RegistryAccess registryAccess,
         RegistryOps.RegistryInfoLookup lookup,
         Loader<T> loader,
         Reporter reporter
@@ -217,13 +219,12 @@ public final class RegistryLoader {
                         ));
                     }
                 } catch (IOException o) {
-                    // Unable to read raw text
+                    Thiocyanate.LOGGER.warn("Unable to read raw text", o);
                 }
 
                 registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), error.toString()));
                 continue;
-            }
-            catch (JsonIOException | IOException e) {
+            } catch (JsonIOException | IOException e) {
                 registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), "IO Error: " + e.getMessage()));
                 continue;
             }
@@ -233,7 +234,7 @@ public final class RegistryLoader {
             // - NeoForge implements conditions using a wrapped decoder
             //
             // So, we support both
-            if (XPlatform.INSTANCE.checkFabricConditions(json, key, registryAccess)) {
+            if (XPlatform.INSTANCE.checkFabricConditions(json, key, lookup)) {
                 continue;
             }
 
@@ -259,6 +260,8 @@ public final class RegistryLoader {
             reporter.unboundReferences.remove(key);
             reporter.currentReference = null;
         }
+
+        TagLoader.loadTagsForRegistry(resourceManager, loader.registry);
     }
 
     @SuppressWarnings("unchecked")

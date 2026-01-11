@@ -5,7 +5,8 @@
 	"name": "Thiocyanate Testmod",
 	"description": "",
 	"authors": [
-		"Survivalblock"
+		"Survivalblock",
+        "AlcatrazEscapee"
 	],
 	"environment": "*",
 	"entrypoints": {

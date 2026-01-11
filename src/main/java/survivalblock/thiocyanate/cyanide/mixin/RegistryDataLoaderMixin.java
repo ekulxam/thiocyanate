@@ -13,9 +13,13 @@ import survivalblock.thiocyanate.cyanide.core.RegistryLoader;
 
 @Mixin(RegistryDataLoader.class)
 public abstract class RegistryDataLoaderMixin {
+    // TODO: fix for 26
     @Inject(
         // We only are concerned with loading from disk, not from network
+        //? if <26
         method = "load(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/List;Ljava/util/List;)Lnet/minecraft/core/RegistryAccess$Frozen;",
+        //? if >26
+        /*method = "load(Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/List;Ljava/util/List;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;*/
         at = @At("HEAD"),
         cancellable = true
     )

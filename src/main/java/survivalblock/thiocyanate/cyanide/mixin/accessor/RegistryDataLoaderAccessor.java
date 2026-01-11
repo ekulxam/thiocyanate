@@ -5,7 +5,6 @@ import java.util.function.Function;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrationInfo;
-import net.minecraft.core.Registry;
 import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.resources.RegistryOps;
@@ -26,12 +25,12 @@ public interface RegistryDataLoaderAccessor {
     }
 
     @Invoker("createInfoForContextRegistry")
-    static <T> RegistryOps.RegistryInfo<T> invoke$createInfoForContextRegistry(HolderLookup.RegistryLookup<T> registryLookup) {
+    static <T> RegistryOps.RegistryInfo<T> thiocyanate$createInfoForContextRegistry(HolderLookup.RegistryLookup<T> registryLookup) {
         throw new UnsupportedOperationException("Mixin invoker");
     }
 
     @Invoker("createInfoForNewRegistry")
-    static <T> RegistryOps.RegistryInfo<T> invoke$createInfoForNewRegistry(WritableRegistry<T> registry) {
+    static <T> RegistryOps.RegistryInfo<T> thiocyanate$createInfoForNewRegistry(WritableRegistry<T> registry) {
         throw new UnsupportedOperationException("Mixin invoker");
     }
 }

@@ -30,14 +30,16 @@ public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
         {
-            FabricDataGenerator.Pack featureCycle = createBuiltinDataPack(fabricDataGenerator, Thiocyanate.id("feature_cycle"));
+            FabricDataGenerator.Pack featureCycle = createBuiltinDataPack(fabricDataGenerator, FEATURE_CYCLE_PACK_ID);
             CyanideDynamicRegistriesGenerator registriesGenerator = featureCycle.addProvider(CyanideDynamicRegistriesGenerator::new);
+            registriesGenerator.attach(NO_OP);
             registriesGenerator.attach(NOOP_1, NOOP_2, NOOP_3);
             registriesGenerator.attach(Biomes.OCEAN, Biomes.PLAINS);
         }
 
         {
-            FabricDataGenerator.Pack test = createBuiltinDataPack(fabricDataGenerator, Thiocyanate.id("test"));
+            FabricDataGenerator.Pack test = createBuiltinDataPack(fabricDataGenerator, TEST_PACK_ID);
+
             CyanideDynamicRegistriesGenerator registriesGenerator = test.addProvider(CyanideDynamicRegistriesGenerator::new);
             registriesGenerator.attach(BROKEN_FEATURE, THE_VOID, UNKNOWN_CARVER, UNKNOWN_FEATURES);
 
@@ -61,6 +63,7 @@ public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
                             BROKEN_ORE_TIN,
                             MISSING_CONFIGURED_FEATURE
                     ));
+
             test.addProvider((fabricDataOutput, completableFuture) -> new CyanideCodecGenerator<>(fabricDataOutput, completableFuture, "worldgen/template_pools", StructureTemplatePool.DIRECT_CODEC, INVALID_PROCESSORS));
 
             test.addProvider((fabricDataOutput, completableFuture) -> new ExistingJsonDataGenerator());

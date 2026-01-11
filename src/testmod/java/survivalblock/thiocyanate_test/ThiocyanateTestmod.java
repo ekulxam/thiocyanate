@@ -3,6 +3,12 @@ package survivalblock.thiocyanate_test;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
+import net.fabricmc.fabric.impl.resource.ResourceLoaderImpl;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.fabricmc.loader.api.metadata.ModOrigin;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
@@ -47,13 +53,18 @@ import org.slf4j.LoggerFactory;
 import survivalblock.thiocyanate_test.mixin.LegacySinglePoolElementAccessor;
 import survivalblock.thiocyanate_test.worldgen.NamedFeatureConfiguration;
 
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 public class ThiocyanateTestmod implements ModInitializer {
-	public static final String MOD_ID = "thiocyanate_testmod";
+	public static final String MOD_ID = "thiocyanate_test";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    public static final Identifier FEATURE_CYCLE_PACK_ID = Identifier.fromNamespaceAndPath(MOD_ID, "feature_cycle");
+    public static final Identifier TEST_PACK_ID = Identifier.fromNamespaceAndPath(MOD_ID, "test");
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> NO_OP = FeatureUtils.createKey("no_op");
 
@@ -85,11 +96,66 @@ public class ThiocyanateTestmod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent(modContainer -> {
+            ModContainer trueGenerated = new ModContainer() {
+                @Override
+                public ModMetadata getMetadata() {
+                    return modContainer.getMetadata();
+                }
 
+                @Override
+                public List<Path> getRootPaths() {
+                    return modContainer.getRootPaths().stream().map(path -> {
+                        String pathString = path.toString();
+                        // probably multiversion problem
+                        pathString = pathString.substring(0, pathString.indexOf("build")) + "src/testmod/generated";
+                        return Path.of(pathString);
+                    }).toList();
+                }
+
+                @Override
+                public ModOrigin getOrigin() {
+                    return modContainer.getOrigin();
+                }
+
+                @Override
+                public Optional<ModContainer> getContainingMod() {
+                    return modContainer.getContainingMod();
+                }
+
+                @Override
+                public Collection<ModContainer> getContainedMods() {
+                    return modContainer.getContainedMods();
+                }
+
+                @SuppressWarnings("deprecation")
+                @Override
+                public Path getRootPath() {
+                    return modContainer.getRootPath();
+                }
+
+                @SuppressWarnings("deprecation")
+                @Override
+                public Path getPath(String file) {
+                    return modContainer.getPath(file);
+                }
+            };
+
+            boolean featureCycle = registerBuiltinDataPack(FEATURE_CYCLE_PACK_ID, trueGenerated, PackActivationType.DEFAULT_ENABLED);
+            boolean test = registerBuiltinDataPack(TEST_PACK_ID, trueGenerated, PackActivationType.DEFAULT_ENABLED);
+            if (!featureCycle || !test) {
+                LOGGER.warn("Some datapacks were not properly loaded! FeatureCycle: {}, Test: {}", featureCycle, test);
+            }
+        });
     }
 
     public static Identifier cyanide(String path) {
         return Identifier.fromNamespaceAndPath("cyanide", path);
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public static boolean registerBuiltinDataPack(Identifier id, ModContainer modContainer, PackActivationType activationType) {
+        return ResourceLoaderImpl.registerBuiltinPack(id, "datapacks/" + id.getPath(), modContainer, activationType);
     }
 
     public static ResourceKey<ConfiguredFeature<?, ?>> ofConfiguredFeature(Identifier id) {
