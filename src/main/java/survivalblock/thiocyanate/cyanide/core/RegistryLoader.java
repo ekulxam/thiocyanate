@@ -5,7 +5,6 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.MalformedJsonException;
-import com.mojang.logging.LogUtils;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Decoder;
 import com.mojang.serialization.JsonOps;
@@ -37,7 +36,6 @@ import net.minecraft.tags.TagLoader;
 /*import net.minecraft.util.thread.ParallelMapTransform;*/
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 import survivalblock.thiocyanate.Thiocyanate;
 import survivalblock.thiocyanate.cyanide.mixin.accessor.MappedRegistryAccessor;
 import survivalblock.thiocyanate.cyanide.platform.XPlatform;
@@ -58,6 +56,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static survivalblock.thiocyanate.cyanide.mixin.accessor.RegistryDataLoaderAccessor.*;
+import static survivalblock.thiocyanate.Thiocyanate.LOGGER;
 
 /**
  * Cyanide's rewrite of {@link RegistryDataLoader}, with an increased emphasis on proper error reporting.
@@ -67,8 +66,10 @@ import static survivalblock.thiocyanate.cyanide.mixin.accessor.RegistryDataLoade
  */
 @SuppressWarnings("JavadocReference")
 public final class RegistryLoader {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Pattern PATTERN_LINE = Pattern.compile("at line (\\d+) column (\\d+)");
+    public static final Pattern PATTERN_LINE = Pattern.compile("at line (\\d+) column (\\d+)");
+
+    private RegistryLoader() {
+    }
 
     /**
      * @see RegistryDataLoader#load(RegistryDataLoader.LoadingFunction, List, List)
@@ -147,7 +148,7 @@ public final class RegistryLoader {
     /**
      * @see MappedRegistry#createRegistrationLookup()
      */
-    private static <T> RegistryOps.RegistryInfo<T> createNewRegistryInfo(RegistryOps.RegistryInfo<T> originalInfo, Reporter reporter) {
+    public static <T> RegistryOps.RegistryInfo<T> createNewRegistryInfo(RegistryOps.RegistryInfo<T> originalInfo, Reporter reporter) {
         final var originalLookup = originalInfo.getter();
         return new RegistryOps.RegistryInfo<>(originalInfo.owner(), new HolderGetter<>() {
             @Override
@@ -192,7 +193,7 @@ public final class RegistryLoader {
      * @see RegistryDataLoader#loadContentsFromManager
      * @see RegistryDataLoader.ResourceManagerRegistryLoadTask#load(RegistryOps.RegistryInfoLookup, Executor) 
      */
-    private static <T> /*? <=26 {*/ void /*?} else {*/ /*CompletableFuture<?>*//*?}*/ loadRegistry(
+    public static <T> /*? <=26 {*/ void /*?} else {*/ /*CompletableFuture<?>*//*?}*/ loadRegistry(
         ResourceManager resourceManager,
         RegistryOps.RegistryInfoLookup lookup,
         Loader<T> loader,
@@ -256,7 +257,7 @@ public final class RegistryLoader {
                                         ));
                                     }
                                 } catch (IOException o) {
-                                    Thiocyanate.LOGGER.warn("Unable to read raw text", o);
+                                    LOGGER.warn("Unable to read raw text", o);
                                 }
 
                                 registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), error.toString()));
@@ -327,7 +328,7 @@ public final class RegistryLoader {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> void freezeRegistry(Loader<T> loader, Reporter reporter) {
+    public static <T> void freezeRegistry(Loader<T> loader, Reporter reporter) {
         final RegistryReporter registryReporter = reporter.registry(loader.data.key());
 
         // Registry freezing has two conditions:
@@ -391,23 +392,23 @@ public final class RegistryLoader {
     /**
      * Returns a pretty-printed reference for a resource key. For example, {@code "namespace:worldgen/configured_feature/path"}
      */
-    private static Identifier prettyId(ResourceKey<?> key) {
+    public static Identifier prettyId(ResourceKey<?> key) {
         return key.identifier().withPrefix(key.registry().getPath() + "/");
     }
 
-    private static String at(String sourcePackId, ResourceKey<?> key) {
+    public static String at(String sourcePackId, ResourceKey<?> key) {
         return "  at '%s' defined in '%s'".formatted(prettyId(key), sourcePackId);
     }
 
-    static class Loader<T> {
-        final RegistryData<T> data;
-        final WritableRegistry<T> registry;
+    public static class Loader<T> {
+        public final RegistryData<T> data;
+        public final WritableRegistry<T> registry;
         //? if >=26 {
-        /*final ConcurrentHolderGetter<T> concurrentRegistrationGetter;
-        final Object writeLock = new Object();
+        /*public final ConcurrentHolderGetter<T> concurrentRegistrationGetter;
+        public final Object writeLock = new Object();
         *///?}
 
-        Loader(RegistryData<T> data) {
+        public Loader(RegistryData<T> data) {
             this.data = data;
             this.registry = new MappedRegistry<>(data.key(), Lifecycle.stable());
             /*? >=26 {*/ /*this.concurrentRegistrationGetter = new ConcurrentHolderGetter<>(this.writeLock, this.registry.createRegistrationLookup()); *//*?}*/
@@ -420,22 +421,22 @@ public final class RegistryLoader {
         *///?}
     }
 
-    static class Reporter {
-        final Map<ResourceKey<? extends Registry<?>>, RegistryReporter> errors = new IdentityHashMap<>();
-        final Map<ResourceKey<?>, List<UnboundReference>> unboundReferences = new IdentityHashMap<>();
-        @Nullable UnboundReference currentReference = null;
+    public static class Reporter {
+        public final Map<ResourceKey<? extends Registry<?>>, RegistryReporter> errors = new IdentityHashMap<>();
+        public final Map<ResourceKey<?>, List<UnboundReference>> unboundReferences = new IdentityHashMap<>();
+        public @Nullable UnboundReference currentReference = null;
 
-        RegistryReporter registry(ResourceKey<? extends Registry<?>> key) {
-            return errors.computeIfAbsent(key, k -> new RegistryReporter(new IdentityHashMap<>(), new ArrayList<>(), new ArrayList<>()));
+        public RegistryReporter registry(ResourceKey<? extends Registry<?>> key) {
+            return this.errors.computeIfAbsent(key, k -> new RegistryReporter(new IdentityHashMap<>(), new ArrayList<>(), new ArrayList<>()));
         }
 
-        boolean hasError() {
-            return errors.values()
+        public boolean hasError() {
+            return this.errors.values()
                 .stream()
                 .anyMatch(RegistryReporter::hasError);
         }
 
-        String buildError() {
+        public String buildError() {
             final StringBuilder builder = new StringBuilder();
 
             builder.append("registry loading\n\n===== An error occurred loading registries =====\n\n");
@@ -449,21 +450,21 @@ public final class RegistryLoader {
         }
     }
 
-    record RegistryReporter(
+    public record RegistryReporter(
         Map<ResourceKey<?>, LoadingError> loadingErrors,
         List<String> unboundErrors,
         List<String> miscErrors
     ) {
-        boolean hasError() {
+        public boolean hasError() {
             return !loadingErrors.isEmpty()
                 || !unboundErrors.isEmpty()
                 || !miscErrors.isEmpty();
         }
 
-        void buildError(StringBuilder builder, ResourceKey<? extends Registry<?>> key) {
+        public void buildError(StringBuilder builder, ResourceKey<? extends Registry<?>> key) {
             builder.append("Registry '%s':\n\n".formatted(key.identifier()));
 
-            loadingErrors.entrySet()
+            this.loadingErrors.entrySet()
                 .stream()
                 .sorted(Comparator.comparing(e -> e.getKey().identifier()))
                 .forEach(entry -> builder
@@ -472,11 +473,11 @@ public final class RegistryLoader {
                     .append(at(entry.getValue().sourcePackId, entry.getKey()))
                     .append("\n\n"));
 
-            unboundErrors.forEach(error -> builder
+            this.unboundErrors.forEach(error -> builder
                 .append(error)
                 .append("\n"));
 
-            miscErrors.forEach(error -> builder
+            this.miscErrors.forEach(error -> builder
                 .append(error)
                 .append("\n"));
 
@@ -484,17 +485,16 @@ public final class RegistryLoader {
         }
     }
 
-    record UnboundReference(Resource resource, ResourceKey<?> key) {}
-    record LoadingError(String sourcePackId, String message) {}
+    public record UnboundReference(Resource resource, ResourceKey<?> key) {}
+    public record LoadingError(String sourcePackId, String message) {}
 
     //? if >=26 {
-    /*record AlmostRegistered<T>(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, String sourcePackId) {
-
-        AlmostRegistered(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
+    /*public record AlmostRegistered<T>(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, String sourcePackId) {
+        public AlmostRegistered(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
             this(key, result, info, reporter, resource.sourcePackId());
         }
 
-        static <T> AlmostRegistered<T> error(ResourceKey<T> key, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
+        public static <T> AlmostRegistered<T> error(ResourceKey<T> key, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
             return new AlmostRegistered<>(key, DataResult.error(() -> ""), info, reporter, resource);
         }
     }

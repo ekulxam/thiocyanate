@@ -22,8 +22,9 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-
 public final class FeatureCycleDetector {
+    private FeatureCycleDetector() {
+    }
     /**
      * A modified version of {@link FeatureSorter#buildFeaturesPerStep} with several improvements, in order to properly report errors.
      * Added comments, removed vanilla's slow as heck "try this again by removing biomes until it doesn't break" detector and replace
@@ -172,7 +173,7 @@ public final class FeatureCycleDetector {
         return featuresPerStepData.build();
     }
 
-    private static boolean depthFirstSearch(Map<FeatureData, Set<FeatureData>> edges, Set<FeatureData> nonCyclicalNodes, Set<FeatureData> pathSet, Consumer<FeatureData> onNonCyclicalNodeFound, Consumer<FeatureData> onCyclicalNodeFound, FeatureData start) {
+    public static boolean depthFirstSearch(Map<FeatureData, Set<FeatureData>> edges, Set<FeatureData> nonCyclicalNodes, Set<FeatureData> pathSet, Consumer<FeatureData> onNonCyclicalNodeFound, Consumer<FeatureData> onCyclicalNodeFound, FeatureData start) {
         // Called initially with:
         // nonCyclicalNodes = { ... } does not contain start
         // reachable = {}
@@ -213,11 +214,11 @@ public final class FeatureCycleDetector {
         }
     }
 
-    private static <T> int idFor(T object, Reference2IntMap<T> objectToIntIdMap, MutableInt nextId) {
+    public static <T> int idFor(T object, Reference2IntMap<T> objectToIntIdMap, MutableInt nextId) {
         return objectToIntIdMap.computeIfAbsent(object, key -> nextId.getAndIncrement());
     }
 
-    private static String buildErrorMessage(Map<FeatureData, Map<BiomeData, IntSet>> tracebacks, List<FeatureData> cycle) {
+    public static String buildErrorMessage(Map<FeatureData, Map<BiomeData, IntSet>> tracebacks, List<FeatureData> cycle) {
         final StringBuilder error = new StringBuilder("""
                 A feature cycle was found!
 
@@ -281,8 +282,8 @@ public final class FeatureCycleDetector {
      * @param step The step index the feature was found in.
      * @param feature The placed feature itself
      */
-    record FeatureData(int featureId, int step, PlacedFeature feature, Holder<PlacedFeature> source) {
-        String name() {
+    public record FeatureData(int featureId, int step, PlacedFeature feature, Holder<PlacedFeature> source) {
+        public String name() {
             return source.unwrap().map(
                 e -> e.identifier().toString(),
                 e -> "[Inline feature: " + feature + "]"
@@ -294,8 +295,8 @@ public final class FeatureCycleDetector {
      * @param biomeId An integer ID mapping for the biome
      * @param biome The biome itself
      */
-    record BiomeData(int biomeId, Biome biome, Holder<Biome> source) {
-        String name() {
+    public record BiomeData(int biomeId, Biome biome, Holder<Biome> source) {
+        public String name() {
             return source.unwrap().map(
                 e -> e.identifier().toString(),
                 e -> "[Inline biome: " + biome + "]"

@@ -31,7 +31,7 @@ public abstract class PromotePartialMixin {
         ),
         require = 0
     )
-    private static <A> Codec<A> dontPromotePartialErrors(Codec<A> instance, Consumer<String> onError, Operation<Codec<A>> original) {
+    private static <A> Codec<A> doNotPromotePartialErrors(Codec<A> instance, Consumer<String> onError, Operation<Codec<A>> original) {
         return instance;
     }
 }
