@@ -99,7 +99,7 @@ public final class RegistryLoader {
                     // Trigger Fabric's callback before any loading is complete
                     final Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap = new IdentityHashMap<>(registriesToLoad.size());
                     registryLoader.forEach(loader -> registryMap.put(loader.registry.key(), loader.registry));
-                    XPlatform.INSTANCE.postFabricBeforeRegistryLoadEvent(registryMap);
+                    XPlatform.getInstance().postFabricBeforeRegistryLoadEvent(registryMap);
 
                     // Populate lookup with both static registries, and dynamic (datapack) ones
                     // Create new empty registries for the dynamic ones, and record them in the top-level registry map
@@ -209,7 +209,7 @@ public final class RegistryLoader {
         final RegistryReporter registryReporter = reporter.registry(loader.data.key());
 
         // Modify the element codec to add conditions, as per NeoForge's patch
-        Decoder<Optional<T>> decoder = XPlatform.INSTANCE.getNeoForgeConditionalCodec(loader.data.elementCodec());
+        Decoder<Optional<T>> decoder = XPlatform.getInstance().getNeoForgeConditionalCodec(loader.data.elementCodec());
         //? if <26
         for (Map.Entry<Identifier, Resource> entry : converter.listMatchingResources(resourceManager).entrySet()) {
         //? if >=26 {
@@ -272,7 +272,7 @@ public final class RegistryLoader {
                             // - NeoForge implements conditions using a wrapped decoder
                             //
                             // So, we support both
-                            if (XPlatform.INSTANCE.checkFabricConditions(json, key, lookup)) {
+                            if (XPlatform.getInstance().checkFabricConditions(json, key, lookup)) {
                                 /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
                             }
 
@@ -440,7 +440,7 @@ public final class RegistryLoader {
             final StringBuilder builder = new StringBuilder();
 
             builder.append("registry loading\n\n===== An error occurred loading registries =====\n\n");
-            errors.forEach((key, reporter) -> {
+            this.errors.forEach((key, reporter) -> {
                 if (reporter.hasError()) {
                     reporter.buildError(builder, key);
                 }
@@ -456,9 +456,9 @@ public final class RegistryLoader {
         List<String> miscErrors
     ) {
         public boolean hasError() {
-            return !loadingErrors.isEmpty()
-                || !unboundErrors.isEmpty()
-                || !miscErrors.isEmpty();
+            return !this.loadingErrors.isEmpty()
+                || !this.unboundErrors.isEmpty()
+                || !this.miscErrors.isEmpty();
         }
 
         public void buildError(StringBuilder builder, ResourceKey<? extends Registry<?>> key) {

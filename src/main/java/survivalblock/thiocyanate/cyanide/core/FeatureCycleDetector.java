@@ -235,20 +235,16 @@ public final class FeatureCycleDetector {
             .append(start.name())
             .append("'\n");
 
-        while (iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             final FeatureData current = iterator.next();
             final Map<BiomeData, IntSet> currentTracebacks = tracebacks.get(current);
             int found = 0;
-            for (BiomeData biome : Sets.intersection(prevTracebacks.keySet(), currentTracebacks.keySet()))
-            {
+            for (BiomeData biome : Sets.intersection(prevTracebacks.keySet(), currentTracebacks.keySet())) {
                 // Check if the features have a relative ordering from prev -> current, in that biome
                 final int prevTb = prevTracebacks.get(biome).intStream().min().orElseThrow();
                 final int currTb = currentTracebacks.get(biome).intStream().max().orElseThrow();
-                if (prevTb < currTb)
-                {
-                    if (found == 0)
-                    {
+                if (prevTb < currTb) {
+                    if (found == 0) {
                         error.append("  must be before '")
                             .append(current.name())
                             .append("' (defined in '")
@@ -261,14 +257,11 @@ public final class FeatureCycleDetector {
                     found++;
                 }
             }
-            if (found > 1)
-            {
+            if (found > 1) {
                 error.append(" and ")
                     .append(found - 1)
                     .append(" others)\n");
-            }
-            else if (found > 0)
-            {
+            } else if (found > 0) {
                 error.append(")\n");
             }
 
@@ -284,7 +277,7 @@ public final class FeatureCycleDetector {
      */
     public record FeatureData(int featureId, int step, PlacedFeature feature, Holder<PlacedFeature> source) {
         public String name() {
-            return source.unwrap().map(
+            return this.source.unwrap().map(
                 e -> e.identifier().toString(),
                 e -> "[Inline feature: " + feature + "]"
             );
@@ -297,7 +290,7 @@ public final class FeatureCycleDetector {
      */
     public record BiomeData(int biomeId, Biome biome, Holder<Biome> source) {
         public String name() {
-            return source.unwrap().map(
+            return this.source.unwrap().map(
                 e -> e.identifier().toString(),
                 e -> "[Inline biome: " + biome + "]"
             );

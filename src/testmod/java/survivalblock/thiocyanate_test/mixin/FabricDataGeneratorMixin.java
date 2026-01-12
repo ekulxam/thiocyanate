@@ -1,4 +1,5 @@
-package survivalblock.thiocyanate_test.mixin;
+//? if fabric {
+/*package survivalblock.thiocyanate_test.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
@@ -14,3 +15,4 @@ public class FabricDataGeneratorMixin {
         return ThiocyanateTestDataGenerator.datapacking ? "datapacks" : original;
     }
 }
+*///?}

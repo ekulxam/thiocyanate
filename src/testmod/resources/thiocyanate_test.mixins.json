@@ -8,10 +8,10 @@
     "BiomeMixin",
     "BiomeMixin$TemperatureModifierMixin",
     "CountPlacementMixin",
-    "FabricDataGeneratorMixin",
     "HeightProviderTypeMixin",
     "LegacySinglePoolElementAccessor",
     "OverworldBiomesAccessor",
+    "ProcessorListsAccessor",
     "TrapezoidHeightAccessor"
   ],
   "injectors": {

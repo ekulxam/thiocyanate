@@ -17,10 +17,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"survivalblock.thiocyanate.Thiocyanate"
-		],
-		"fabric-datagen": [
-          "survivalblock.thiocyanate.datagen.ThiocyanateDataGenerator"
+          "survivalblock.thiocyanate.cyanide.platform.ThiocyanateFabric"
 		]
 	},
 	"mixins": [

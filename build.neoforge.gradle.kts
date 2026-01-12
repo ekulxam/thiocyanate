@@ -3,12 +3,12 @@ import java.io.BufferedReader
 import java.io.FileReader
 
 plugins {
-    id("net.fabricmc.fabric-loom")
+    id("net.neoforged.moddev")
     id("maven-publish")
     id("com.modrinth.minotaur")
     kotlin("jvm")
     id("com.google.devtools.ksp")
-    id("dev.kikugie.fletching-table.fabric")
+    id("dev.kikugie.fletching-table.neoforge")
 }
 
 sourceSets {
@@ -18,7 +18,7 @@ sourceSets {
     }
 }
 
-version = "${project.property("mod_version")}+${stonecutter.current.version}-fabric"
+version = "${project.property("mod_version")}+${stonecutter.current.version}-neoforge"
 group = project.property("maven_group") as String
 val minecraft : String = if (hasProperty("deps.minecraft")) project.property("deps.minecraft") as String
     else stonecutter.current.version
@@ -26,9 +26,17 @@ val minecraft : String = if (hasProperty("deps.minecraft")) project.property("de
 base.archivesName = project.property("archives_base_name") as String
 
 repositories {
+    maven {
+        name = "Parchment"
+        url = uri("https://maven.parchmentmc.org")
+        @Suppress("UnstableApiUsage")
+        content {
+            includeGroupAndSubgroups("org.parchmentmc")
+        }
+    }
 }
 
-fabricApi {
+/*fabricApi {
     configureDataGeneration {
         client = true
     }
@@ -39,16 +47,9 @@ fabricApi {
         modId = "${base.archivesName}_test"
         eula = true
     }
-}
+}*/
 
 dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:${minecraft}")
-
-    implementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
-
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    implementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
 }
 
 stonecutter {
@@ -82,7 +83,7 @@ tasks.processResources {
     inputs.property("version", modVersion)
     inputs.property("minecraft", minecraftVersion)
 
-    filesMatching("fabric.mod.json") {
+    filesMatching(listOf("neoforge.mod.json", "META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
         expand(
             mapOf(
                 "version" to modVersion,
@@ -92,8 +93,21 @@ tasks.processResources {
     }
 }
 
-tasks.named<Copy>("processTestmodResources") {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+tasks {
+    processResources {
+        exclude("**/neoforge.mod.json", "**/*.accesswidener", "**/mods.toml")
+    }
+
+    /*named("createMinecraftArtifacts") {
+        dependsOn("stonecutterGenerate")
+    }*/
+
+    register<Copy>("buildAndCollect") {
+        group = "build"
+        from(jar.map { it.archiveFile })
+        into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
+        dependsOn("build")
+    }
 }
 
 tasks.named("build") {
@@ -121,10 +135,12 @@ tasks.register("autoVersionChangelog") {
     }
 }
 
-loom {
-    runConfigs.all {
-        ideConfigGenerated(true)
-        runDir = "../../run"
+/*loom {
+    runConfigs.matching {
+        conf -> !conf.name.lowercase(Locale.ROOT).contains("gametest")
+    }.forEach { it ->
+        it.ideConfigGenerated(true)
+        it.runDir = "../../run"
     }
 
     runConfigs["client"].apply {
@@ -156,6 +172,9 @@ loom {
     }
 
     mods {
+        create("thiocyanate") {
+            sourceSet(sourceSets.main.get())
+        }
         create("thiocyanate_test") {
             sourceSet("testmod")
         }
@@ -163,9 +182,65 @@ loom {
 
     fabricModJsonPath = rootProject.file("src/main/resources/fabric.mod.json")
 
-    /*mixin {
+    mixin {
         useLegacyMixinAp = true
-    }*/
+    }
+}*/
+
+neoForge {
+    version = property("deps.neoforge") as String
+    validateAccessTransformers = true
+    val modId = project.property("archives_base_name") as String
+
+    if (hasProperty("deps.parchment")) {
+        parchment {
+            mappingsVersion = property("deps.parchment") as String
+            minecraftVersion = minecraft
+        }
+    }
+
+    mods {
+        register(modId) {
+            sourceSet(sourceSets["main"])
+        }
+        register(modId + "_test") {
+            sourceSet(sourceSets["testmod"])
+        }
+    }
+
+    sourceSets["main"].resources.srcDir("src/main/generated")
+    sourceSets["testmod"].resources.srcDir("src/testmod/generated")
+
+    runs {
+        register("client") {
+            client()
+            gameDirectory = project.file("run")
+
+            sourceSet = sourceSets.main
+
+            loadedMods.add(mods.named(modId))
+        }
+
+        register("server") {
+            server()
+            gameDirectory = project.file("run")
+
+            sourceSet = sourceSets.main
+
+            loadedMods.add(mods.named(modId))
+            programArguments.add("--nogui")
+        }
+
+        register("testmodClient") {
+            client()
+            gameDirectory = project.file("run/testmod")
+
+            sourceSet = sourceSets["testmod"]
+
+            loadedMods.add(mods.named(modId))
+            loadedMods.add(mods.named(modId + "_test"))
+        }
+    }
 }
 
 java {

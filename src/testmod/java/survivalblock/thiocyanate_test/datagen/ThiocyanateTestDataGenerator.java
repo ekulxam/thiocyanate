@@ -1,4 +1,5 @@
-package survivalblock.thiocyanate_test.datagen;
+//? if fabric {
+/*package survivalblock.thiocyanate_test.datagen;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
@@ -14,13 +15,16 @@ import survivalblock.thiocyanate_test.worldgen.InvalidCodecs;
 
 import static survivalblock.thiocyanate_test.ThiocyanateTestmod.*;
 
-/**
+/^*
+ * I can't be bothered to setup datagen for neoforge, so just copy+paste the outputs
+ * into neoforge folder
+ *
  * Instructions:
  * 1. Run datagen
  * 2. Run minecraft and see what thiocyanate says
  * 3. Remove problematic jsons
  * 4. Repeat steps 2-4
- */
+ ^/
 public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
     public static volatile boolean datapacking = false;
     public static volatile boolean tellMinecraftThatEverythingIsFine = false;
@@ -79,9 +83,9 @@ public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
         registryBuilder.add(Registries.TEMPLATE_POOL, ThiocyanateTestmod::bootstrapTemplatePools);
     }
 
-    /**
+    /^*
      * This is a blocking operation. Asynchronous execution is not supported.
-     */
+     ^/
     public FabricDataGenerator.Pack createBuiltinDataPack(FabricDataGenerator fabricDataGenerator, Identifier id) {
         datapacking = true;
         FabricDataGenerator.Pack datapack = fabricDataGenerator.createBuiltinResourcePack(id);
@@ -93,3 +97,4 @@ public class ThiocyanateTestDataGenerator implements DataGeneratorEntrypoint {
         return key == ThiocyanateTestmod.BROKEN_ORE_TIN || key == ThiocyanateTestmod.INVALID_TEMPERATURE_MODIFIER;
     }
 }
+*///?}

@@ -2,26 +2,34 @@ package survivalblock.thiocyanate_test;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import net.fabricmc.api.ModInitializer;
+//? if fabric {
+/*import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
 import net.fabricmc.fabric.impl.resource.ResourceLoaderImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.api.metadata.ModOrigin;
+*///?}
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BiomeDefaultFeatures;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.Carvers;
-import net.minecraft.data.worldgen.ProcessorLists;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.data.worldgen.features.OreFeatures;
 import net.minecraft.data.worldgen.placement.MiscOverworldPlacements;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
+//? if neoforge
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+//? if neoforge {
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackSource;
+//?}
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.valueproviders.UniformFloat;
 import net.minecraft.world.level.biome.Biome;
@@ -47,23 +55,35 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.pools.EmptyPoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
+//? if neoforge {
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.AddPackFindersEvent;
+//?}
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import survivalblock.thiocyanate_test.mixin.LegacySinglePoolElementAccessor;
 import survivalblock.thiocyanate_test.mixin.OverworldBiomesAccessor;
+import survivalblock.thiocyanate_test.mixin.ProcessorListsAccessor;
 import survivalblock.thiocyanate_test.worldgen.NamedFeatureConfiguration;
 
-import java.nio.file.Path;
+//? if fabric {
+/*import java.nio.file.Path;
 import java.util.Collection;
+*///?}
 import java.util.List;
 import java.util.Optional;
+//? if neoforge
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class ThiocyanateTestmod implements ModInitializer {
+//? if neoforge
+@Mod(ThiocyanateTestmod.MOD_ID)
+public class ThiocyanateTestmod /*? fabric {*/ /*implements ModInitializer *//*?}*/ {
 	public static final String MOD_ID = "thiocyanate_test";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    public static final PackActivationType PACK_ACTIVATION_TYPE = PackActivationType.NORMAL;
+    public static final boolean AUTO_ACTIVATE_PACKS = false;
     public static final Identifier FEATURE_CYCLE_PACK_ID = Identifier.fromNamespaceAndPath(MOD_ID, "feature_cycle");
     public static final Identifier TEST_PACK_ID = Identifier.fromNamespaceAndPath(MOD_ID, "test");
 
@@ -95,7 +115,8 @@ public class ThiocyanateTestmod implements ModInitializer {
     public static final ResourceKey<StructureProcessorList> INVALID_PROCESSOR_LIST = ResourceKey.create(Registries.PROCESSOR_LIST, Identifier.withDefaultNamespace("invalid_processor_list_name"));
     public static final ResourceKey<StructureTemplatePool> INVALID_PROCESSORS = ResourceKey.create(Registries.TEMPLATE_POOL, cyanide("template_pool_invalid_processors"));
 
-    @Override
+    //? if fabric {
+    /*@Override
     public void onInitialize() {
         FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent(modContainer -> {
             ModContainer trueGenerated = new ModContainer() {
@@ -142,21 +163,34 @@ public class ThiocyanateTestmod implements ModInitializer {
                 }
             };
 
-            boolean featureCycle = registerBuiltinDataPack(FEATURE_CYCLE_PACK_ID, trueGenerated, PACK_ACTIVATION_TYPE);
-            boolean test = registerBuiltinDataPack(TEST_PACK_ID, trueGenerated, PACK_ACTIVATION_TYPE);
+            PackActivationType activationType = AUTO_ACTIVATE_PACKS ? PackActivationType.DEFAULT_ENABLED : PackActivationType.NORMAL;
+            boolean featureCycle = registerBuiltinDataPack(FEATURE_CYCLE_PACK_ID, trueGenerated, activationType);
+            boolean test = registerBuiltinDataPack(TEST_PACK_ID, trueGenerated, activationType);
             if (!featureCycle || !test) {
                 LOGGER.warn("Some datapacks were not properly loaded! FeatureCycle: {}, Test: {}", featureCycle, test);
             }
         });
     }
 
-    public static Identifier cyanide(String path) {
-        return Identifier.fromNamespaceAndPath("cyanide", path);
-    }
-
     @SuppressWarnings("UnusedReturnValue")
     public static boolean registerBuiltinDataPack(Identifier id, ModContainer modContainer, PackActivationType activationType) {
         return ResourceLoaderImpl.registerBuiltinPack(id, "datapacks/" + id.getPath(), modContainer, activationType);
+    }
+    
+    *///?} else if neoforge {
+    public ThiocyanateTestmod(IEventBus modBus) {
+        modBus.addListener(ThiocyanateTestmod::registerBuiltinDataPacks);
+    }
+
+    public static void registerBuiltinDataPacks(AddPackFindersEvent event) {
+        Consumer<Identifier> registrar = id -> event.addPackFinders(id, PackType.SERVER_DATA, Component.literal(id.getNamespace() + "/" + id.getPath()), PackSource.BUILT_IN, AUTO_ACTIVATE_PACKS, Pack.Position.BOTTOM);
+        registrar.accept(FEATURE_CYCLE_PACK_ID);
+        registrar.accept(TEST_PACK_ID);
+    }
+    //?}
+
+    public static Identifier cyanide(String path) {
+        return Identifier.fromNamespaceAndPath("cyanide", path);
     }
 
     public static ResourceKey<ConfiguredFeature<?, ?>> ofConfiguredFeature(Identifier id) {
@@ -260,7 +294,7 @@ public class ThiocyanateTestmod implements ModInitializer {
         plainsFeatureCarver.addCarver(Carvers.CAVE)
                 .addCarver(Carvers.CAVE_EXTRA_UNDERGROUND)
                 .addCarver(Carvers.CANYON)
-                .addFeature(GenerationStep.Decoration.RAW_GENERATION /* 0 */, NOOP_1)
+                .addFeature(GenerationStep.Decoration.RAW_GENERATION, NOOP_1)
                 .addFeature(GenerationStep.Decoration.RAW_GENERATION, NOOP_2)
                 .addFeature(GenerationStep.Decoration.RAW_GENERATION, MiscOverworldPlacements.LAKE_LAVA_UNDERGROUND)
                 .addFeature(GenerationStep.Decoration.RAW_GENERATION, MiscOverworldPlacements.LAKE_LAVA_SURFACE)
@@ -355,7 +389,7 @@ public class ThiocyanateTestmod implements ModInitializer {
         HolderGetter<StructureProcessorList> processors = context.lookup(Registries.PROCESSOR_LIST);
 
         Holder<StructureTemplatePool> terminator = vanillaPools.getOrThrow(ResourceKey.create(Registries.TEMPLATE_POOL, Identifier.withDefaultNamespace("village/plains/terminators")));
-        Holder<StructureProcessorList> emptyProcessor = processors.getOrThrow(ProcessorLists.EMPTY);
+        Holder<StructureProcessorList> emptyProcessor = processors.getOrThrow(ProcessorListsAccessor.thiocyanate_test$getEmpty());
         Holder<StructureProcessorList> invalidProcessor = processors.getOrThrow(INVALID_PROCESSOR_LIST);
 
         context.register(INVALID_PROCESSORS,

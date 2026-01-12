@@ -44,11 +44,15 @@ public final class MixinHooks {
     }
 
     public static Codec<FloatProvider> validate(float min, float max, Codec<FloatProvider> codec) {
-        return codec.validate(provider -> provider.getMinValue() < min
-            ? DataResult.error(() -> "Value provider too low (must be >= %g), got %s".formatted(min, prettyPrint(provider)))
-            : provider.getMaxValue() > max
-                ? DataResult.error(() -> "Value provider too high (must be <= %g), got %s".formatted(max, prettyPrint(provider)))
-                : DataResult.success(provider));
+        return codec.validate(provider -> {
+            if (provider.getMinValue() < min) {
+                return DataResult.error(() -> "Value provider too low (must be >= %g), got %s".formatted(min, prettyPrint(provider)));
+            }
+            if (provider.getMaxValue() > max) {
+                return DataResult.error(() -> "Value provider too high (must be <= %g), got %s".formatted(max, prettyPrint(provider)));
+            }
+            return DataResult.success(provider);
+        });
     }
 
     public static String prettyPrint(FloatProvider provider) {
@@ -58,11 +62,15 @@ public final class MixinHooks {
     }
 
     public static <T extends IntProvider> Codec<T> validate(int min, int max, Codec<T> codec) {
-        return codec.validate(provider -> provider.getMinValue() < min
-            ? DataResult.error(() -> "Value provider too low (must be >= %d), got %s".formatted(min, prettyPrint(provider)))
-            : provider.getMaxValue() > max
-                ? DataResult.error(() -> "Value provider too high (must be <= %d), got %s".formatted(max, prettyPrint(provider)))
-                : DataResult.success(provider));
+        return codec.validate(provider -> {
+            if (provider.getMinValue() < min) {
+                return DataResult.error(() -> "Value provider too low (must be >= %d), got %s".formatted(min, prettyPrint(provider)));
+            }
+            if (provider.getMaxValue() > max) {
+                return DataResult.error(() -> "Value provider too high (must be <= %d), got %s".formatted(max, prettyPrint(provider)));
+            }
+            return DataResult.success(provider);
+        });
     }
 
     public static String prettyPrint(IntProvider provider) {

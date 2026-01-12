@@ -19,7 +19,7 @@ sourceSets {
     }
 }
 
-version = "${project.property("mod_version")}+${stonecutter.current.version}"
+version = "${project.property("mod_version")}+${stonecutter.current.version}-fabric"
 group = project.property("maven_group") as String
 val minecraft : String = if (hasProperty("deps.minecraft")) project.property("deps.minecraft") as String
     else stonecutter.current.version
@@ -27,6 +27,14 @@ val minecraft : String = if (hasProperty("deps.minecraft")) project.property("de
 base.archivesName = project.property("archives_base_name") as String
 
 repositories {
+    maven {
+        name = "Parchment"
+        url = uri("https://maven.parchmentmc.org")
+        @Suppress("UnstableApiUsage")
+        content {
+            includeGroupAndSubgroups("org.parchmentmc")
+        }
+    }
 }
 
 fabricApi {

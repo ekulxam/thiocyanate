@@ -1,4 +1,5 @@
-package survivalblock.thiocyanate_test.datagen;
+//? if fabric {
+/*package survivalblock.thiocyanate_test.datagen;
 
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -44,3 +45,4 @@ public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
         return "Codecs for " + this.directoryName;
     }
 }
+*///?}

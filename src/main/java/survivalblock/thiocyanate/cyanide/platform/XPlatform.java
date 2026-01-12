@@ -6,19 +6,15 @@ import com.mojang.serialization.Decoder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
+import survivalblock.thiocyanate.Thiocyanate;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public interface XPlatform {
-    XPlatform INSTANCE = getInstance();
-
-    private static XPlatform getInstance() {
-        //? if fabric {
-        return new FabricPlatform();
-        //?} else {
-        /*return new XPlatform(){};
-        *///?}
+    static XPlatform getInstance() {
+        return Objects.requireNonNull(Thiocyanate.getInstance(), "Thiocyanate was not properly initialized!");
     }
 
     default void postFabricBeforeRegistryLoadEvent(Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap) {}

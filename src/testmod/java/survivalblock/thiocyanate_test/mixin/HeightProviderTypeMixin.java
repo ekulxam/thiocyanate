@@ -1,4 +1,5 @@
-package survivalblock.thiocyanate_test.mixin;
+//? if fabric {
+/*package survivalblock.thiocyanate_test.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -21,3 +22,4 @@ public interface HeightProviderTypeMixin {
         return original.call(registry, string, object);
     }
 }
+*///?}

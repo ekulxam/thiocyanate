@@ -15,7 +15,7 @@ public interface RegistryMixin {
      * Replace this error message, because it's generically terrible.
      */
     @Inject(
-        method = /*? <=26 {*/ "method_57063" /*?} else {*/ /*"lambda$referenceHolderWithLifecycle$2" *//*?}*/,
+        method = /*? <=26 && fabric {*/ /*"method_57063" *//*?} else {*/ "lambda$referenceHolderWithLifecycle$2" /*?}*/,
         at = @At("HEAD"),
         cancellable = true,
         require = 0
