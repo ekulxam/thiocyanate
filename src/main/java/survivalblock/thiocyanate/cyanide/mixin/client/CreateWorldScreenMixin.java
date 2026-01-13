@@ -18,7 +18,7 @@ public abstract class CreateWorldScreenMixin {
         *///?} else if neoforge {
         method = "lambda$applyNewPackConfig$25"
         //?}
-        at = @At(
+        , at = @At(
             value = "INVOKE",
             target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Throwable;)V",
             remap = false

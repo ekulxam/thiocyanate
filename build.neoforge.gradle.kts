@@ -77,7 +77,7 @@ fletchingTable {
     }
 }
 
-tasks.processResources {
+tasks.withType<ProcessResources>().configureEach {
     val modVersion = project.version
     val minecraftVersion = minecraft
     inputs.property("version", modVersion)
@@ -94,7 +94,7 @@ tasks.processResources {
 }
 
 tasks {
-    processResources {
+    withType<ProcessResources> {
         exclude("**/neoforge.mod.json", "**/*.accesswidener", "**/mods.toml")
     }
 

@@ -30,6 +30,7 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 //?}
+import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.valueproviders.UniformFloat;
 import net.minecraft.world.level.biome.Biome;
@@ -183,7 +184,7 @@ public class ThiocyanateTestmod /*? fabric {*/ /*implements ModInitializer *//*?
     }
 
     public static void registerBuiltinDataPacks(AddPackFindersEvent event) {
-        Consumer<Identifier> registrar = id -> event.addPackFinders(id, PackType.SERVER_DATA, Component.literal(id.getNamespace() + "/" + id.getPath()), PackSource.BUILT_IN, AUTO_ACTIVATE_PACKS, Pack.Position.BOTTOM);
+        Consumer<Identifier> registrar = id -> event.addPackFinders(id.withPath(path -> "datapacks/" + path), PackType.SERVER_DATA, Component.literal(id.getNamespace() + "/" + id.getPath()), PackSource.BUILT_IN, AUTO_ACTIVATE_PACKS, Pack.Position.BOTTOM);
         registrar.accept(FEATURE_CYCLE_PACK_ID);
         registrar.accept(TEST_PACK_ID);
     }

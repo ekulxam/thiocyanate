@@ -5,10 +5,6 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "BiomeDataMixin",
-    "BiomeMixin",
-    "BiomeMixin$TemperatureModifierMixin",
-    "CountPlacementMixin",
-    "HeightProviderTypeMixin",
     "LegacySinglePoolElementAccessor",
     "OverworldBiomesAccessor",
     "ProcessorListsAccessor",

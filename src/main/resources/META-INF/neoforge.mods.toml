@@ -6,8 +6,10 @@ license = "MIT"
 modId = "thiocyanate"
 version = "${version}"
 displayName = "Thiocyanate"
-authors = "Survivalblock\nAlcatrazEscapee"
-description = "SCN - a modern port of Cyanide"
+authors = "Survivalblock, AlcatrazEscapee"
+description = '''
+SCN - a modern port of Cyanide
+'''
 logoFile = "assets/thiocyanate/icon.png"
 issueTrackerURL = "https://github.com/ekulxam/thiocyanate/issues"
 displayURL="https://modrinth.com/mod/thiocyanate"
