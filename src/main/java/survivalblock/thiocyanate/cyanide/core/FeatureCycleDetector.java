@@ -10,6 +10,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+//? if fabric && <26
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.biome.Biome;
@@ -45,9 +47,7 @@ public final class FeatureCycleDetector {
         // Maps to establish identity among features and biomes
         // We assign features and biomes ID numbers based on ==, and then create wrapper objects which respect equals() identity
         final Reference2IntMap<PlacedFeature> featureToIntIdMap = new Reference2IntOpenHashMap<>();
-        final Reference2IntMap<BiomeData<T>> biomeToIntIdMap = new Reference2IntOpenHashMap<>();
         final MutableInt nextFeatureId = new MutableInt(0);
-        final MutableInt nextBiomeId = new MutableInt(0);
 
         // Sort by step, then by index
         final Comparator<FeatureData> compareByStepThenByIndex = Comparator.comparingInt(FeatureData::step).thenComparingInt(FeatureData::featureId);
@@ -79,8 +79,7 @@ public final class FeatureCycleDetector {
                     flatDataList.add(featureIdentity);
 
                     // Track traceback biomes
-                    final BiomeData<T> biomeIdentity = new BiomeData<>(new MutableInt(0), biomeHolder);
-                    biomeIdentity.biomeId.setValue(idFor(biomeIdentity, biomeToIntIdMap, nextBiomeId));
+                    final BiomeData<T> biomeIdentity = new BiomeData<>(biomeHolder);
 
                     nodesToTracebacks
                         .computeIfAbsent(featureIdentity, key -> new HashMap<>(1))
@@ -286,17 +285,19 @@ public final class FeatureCycleDetector {
     }
 
     /**
-     * @param biomeId An integer ID mapping for the biome
      * @param source The biome itself, usually a {@link Holder}<{@link Biome}>
      */
-    public record BiomeData<T>(MutableInt biomeId, T source) {
+    public record BiomeData<T>(T source) {
         public String name() {
             return applyOnMaybeHolder(
                     holder -> holder.unwrap().map(
                             e -> e.identifier().toString(),
                             e -> {
                                 Object obj = holder.value();
-                                return "[Inline " + obj.getClass().getSimpleName() + ": " + obj + "]";
+                                String className = obj.getClass().getSimpleName();
+                                //? if fabric && <26
+                                className = FabricLoader.getInstance().getMappingResolver().unmapClassName("yarn", className);
+                                return "[Inline " + className + ": " + obj + "]";
                             }),
                     Object::toString
             );
@@ -306,9 +307,6 @@ public final class FeatureCycleDetector {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             BiomeData<?> other = (BiomeData<?>) o;
-            if (!Objects.equals(this.biomeId, other.biomeId)) {
-                return false;
-            }
             return applyOnMaybeHolder(
                     holder -> other.source instanceof Holder<?> otherHolder && Objects.equals(holder.value(), otherHolder.value()),
                     source -> Objects.equals(source, other.source)
@@ -317,7 +315,7 @@ public final class FeatureCycleDetector {
 
         @Override
         public int hashCode() {
-            return Objects.hash(this.biomeId, applyOnMaybeHolder(Holder::value, source -> source));
+            return applyOnMaybeHolder(Holder::value, source -> source).hashCode();
         }
 
         public <R> R applyOnMaybeHolder(Function<Holder<?>, R> holderFunction, Function<T, R> valueFunction) {
