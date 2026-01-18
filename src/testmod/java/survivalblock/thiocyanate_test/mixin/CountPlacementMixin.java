@@ -1,5 +1,5 @@
 //? if fabric {
-/*package survivalblock.thiocyanate_test.mixin;
+package survivalblock.thiocyanate_test.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.fabricmc.fabric.impl.datagen.FabricDataGenHelper;
@@ -18,4 +18,4 @@ public class CountPlacementMixin {
         return original;
     }
 }
-*///?}
+//?}

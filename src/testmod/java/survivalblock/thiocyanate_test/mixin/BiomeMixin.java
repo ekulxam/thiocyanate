@@ -1,5 +1,5 @@
 //? if fabric {
-/*package survivalblock.thiocyanate_test.mixin;
+package survivalblock.thiocyanate_test.mixin;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
@@ -39,4 +39,4 @@ public class BiomeMixin {
         }
     }
 }
-*///?}
+//?}
