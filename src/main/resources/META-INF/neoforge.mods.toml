@@ -8,7 +8,7 @@ version = "${version}"
 displayName = "Thiocyanate"
 authors = "Survivalblock, AlcatrazEscapee"
 description = '''
-SCN - a modern port of Cyanide
+SCN- : a modern port of Cyanide
 '''
 logoFile = "assets/thiocyanate/icon.png"
 issueTrackerURL = "https://github.com/ekulxam/thiocyanate/issues"
