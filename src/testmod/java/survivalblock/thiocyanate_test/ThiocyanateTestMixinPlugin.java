@@ -1,7 +1,5 @@
 package survivalblock.thiocyanate_test;
 
-//? if fabric
-import net.fabricmc.fabric.impl.datagen.FabricDataGenHelper;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -22,10 +20,7 @@ public class ThiocyanateTestMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String mixinClassName, String targetClassName) {
-        //? if fabric
-        return FabricDataGenHelper.ENABLED;
-        //? if neoforge
-        /*return false;*/
+        return System.getProperty("fabric-api.datagen") != null;
     }
 
     @Override
