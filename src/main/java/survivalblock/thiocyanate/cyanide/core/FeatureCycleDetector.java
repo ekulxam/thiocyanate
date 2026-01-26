@@ -11,7 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 //? if fabric && <26
-import net.fabricmc.loader.api.FabricLoader;
+/*import net.fabricmc.loader.api.FabricLoader;*/
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.biome.Biome;
@@ -296,7 +296,7 @@ public final class FeatureCycleDetector {
                                 Object obj = holder.value();
                                 String className = obj.getClass().getSimpleName();
                                 //? if fabric && <26
-                                className = FabricLoader.getInstance().getMappingResolver().unmapClassName("yarn", className);
+                                /*className = FabricLoader.getInstance().getMappingResolver().unmapClassName("yarn", className);*/
                                 return "[Inline " + className + ": " + obj + "]";
                             }),
                     Object::toString

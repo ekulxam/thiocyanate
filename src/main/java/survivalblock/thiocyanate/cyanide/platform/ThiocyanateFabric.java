@@ -1,5 +1,5 @@
 //? if fabric {
-package survivalblock.thiocyanate.cyanide.platform;
+/*package survivalblock.thiocyanate.cyanide.platform;
 
 import com.google.gson.JsonElement;
 import net.fabricmc.api.ModInitializer;
@@ -20,21 +20,21 @@ public class ThiocyanateFabric extends Thiocyanate implements ModInitializer {
     }
 
     // begin credit: cyanide
-    /**
+    /^*
      * @see net.fabricmc.fabric.mixin.registry.sync.RegistryDataLoaderMixin
-     */
+     ^/
     @Override
     public void postFabricBeforeRegistryLoadEvent(Map<ResourceKey<? extends Registry<?>>, Registry<?>> registryMap) {
         DynamicRegistrySetupCallback.EVENT.invoker().onRegistrySetup(new DynamicRegistryViewImpl(registryMap));
     }
 
-    /**
+    /^*
      * @see net.fabricmc.fabric.mixin.resource.conditions.RegistryDataLoaderMixin
-     */
+     ^/
     @Override
     public boolean checkFabricConditions(JsonElement json, ResourceKey<?> key, RegistryOps.RegistryInfoLookup lookup) {
         return json.isJsonObject() && !ResourceConditionsImpl.applyResourceConditions(json.getAsJsonObject(), key.registry().toString(), key.identifier(), lookup);
     }
     // end credit
 }
-//?}
+*///?}

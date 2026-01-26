@@ -1,4 +1,3 @@
-//? if fabric {
 package survivalblock.thiocyanate_test.worldgen;
 
 import com.mojang.serialization.Codec;
@@ -16,7 +15,8 @@ import survivalblock.thiocyanate_test.mixin.TrapezoidHeightAccessor;
 
 import java.util.Map;
 import java.util.Optional;
-
+// if neoforge
+@SuppressWarnings("unused")
 @ApiStatus.NonExtendable
 public interface InvalidCodecs {
 
@@ -49,4 +49,3 @@ public interface InvalidCodecs {
 
     Codec<Biome.TemperatureModifier> PEACHY_TEMPERATURE_MODIFIER = Codec.STRING.xmap(Biome.TemperatureModifier::valueOf, temperatureModifier -> temperatureModifier == Biome.TemperatureModifier.NONE ? temperatureModifier.getSerializedName() : "peachy");
 }
-//?}

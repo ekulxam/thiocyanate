@@ -112,6 +112,7 @@ tasks {
     register<Sync>("syncTestmodDatagen") {
         from(project(":${minecraft}-fabric").tasks.named("runTestmodDatagen"))
         into(file("src/testmod/generated/"))
+        exclude("src/testmod/generated/*/pack.mcmeta")
     }
 }
 

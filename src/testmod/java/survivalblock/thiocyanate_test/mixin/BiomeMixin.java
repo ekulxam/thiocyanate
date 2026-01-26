@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 //? if fabric
-import survivalblock.thiocyanate_test.datagen.ThiocyanateTestDataGenerator;
+/*import survivalblock.thiocyanate_test.datagen.ThiocyanateTestDataGenerator;*/
 import survivalblock.thiocyanate_test.worldgen.InvalidCodecs;
 
 @Mixin(Biome.class)
@@ -20,7 +20,7 @@ public class BiomeMixin {
     @Mixin(Biome.TemperatureModifier.class)
     public static class TemperatureModifierMixin {
         //? if fabric {
-        @Shadow
+        /*@Shadow
         @Final
         public static Codec<Biome.TemperatureModifier> CODEC;
 
@@ -38,6 +38,6 @@ public class BiomeMixin {
                 }
             };
         }
-        //?}
+        *///?}
     }
 }

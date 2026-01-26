@@ -1,5 +1,5 @@
 //? if neoforge {
-/*package survivalblock.thiocyanate.cyanide.platform;
+package survivalblock.thiocyanate.cyanide.platform;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Decoder;
@@ -23,4 +23,4 @@ public class ThiocyanateNeoforge extends Thiocyanate {
     }
     // end credit
 }
-*///?}
+//?}
