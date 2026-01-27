@@ -393,7 +393,7 @@ public final class RegistryLoader {
         if (loader.data/*? <=26 {*/ /*.requiredNonEmpty() *//*?} else {*/ .validator() == RegistryValidator.NON_EMPTY/*?}*/ && loader.registry.isEmpty() && registryReporter.loadingErrors.isEmpty()) {
             registryReporter.miscErrors.add("Empty registry: " + loader.data.key().identifier());
         }
-        // if >= 26 {
+        //? if >=26 {
         RegistryValidator<T> validator = loader.data.validator();
         if (validator != RegistryValidator.NONE && validator != RegistryValidator.NON_EMPTY) {
             Map<ResourceKey<?>, Exception> errors = new HashMap<>();
