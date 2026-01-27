@@ -1,5 +1,4 @@
-//? if fabric {
-/*package survivalblock.thiocyanate_test.mixin;
+package survivalblock.thiocyanate_test.mixin;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
@@ -10,7 +9,8 @@ import net.minecraft.world.level.biome.Biome;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import survivalblock.thiocyanate_test.datagen.ThiocyanateTestDataGenerator;
+//? if fabric
+/*import survivalblock.thiocyanate_test.datagen.ThiocyanateTestDataGenerator;*/
 import survivalblock.thiocyanate_test.worldgen.InvalidCodecs;
 
 @Mixin(Biome.class)
@@ -19,7 +19,8 @@ public class BiomeMixin {
     @SuppressWarnings("unused")
     @Mixin(Biome.TemperatureModifier.class)
     public static class TemperatureModifierMixin {
-        @Shadow
+        //? if fabric {
+        /*@Shadow
         @Final
         public static Codec<Biome.TemperatureModifier> CODEC;
 
@@ -37,6 +38,6 @@ public class BiomeMixin {
                 }
             };
         }
+        *///?}
     }
 }
-*///?}
