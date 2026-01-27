@@ -14,10 +14,10 @@ public abstract class CreateWorldScreenMixin {
         //? if <=26 && fabric {
         /*method = "method_49629"
         *///?} else if fabric {
-        /*method = "lambda$applyNewPackConfig$5"
-        *///?} else if neoforge {
-        method = "lambda$applyNewPackConfig$25"
-        //?}
+        method = "lambda$applyNewPackConfig$5"
+        //?} else if neoforge {
+        /*method = "lambda$applyNewPackConfig$25"
+        *///?}
         , at = @At(
             value = "INVOKE",
             target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Throwable;)V",

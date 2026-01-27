@@ -1,5 +1,5 @@
 //? if fabric {
-/*package survivalblock.thiocyanate_test.datagen;
+package survivalblock.thiocyanate_test.datagen;
 
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricDynamicRegistryProvider;
@@ -35,4 +35,4 @@ public class CyanideDynamicRegistriesGenerator extends FabricDynamicRegistryProv
         return "Dynamic registries";
     }
 }
-*///?}
+//?}

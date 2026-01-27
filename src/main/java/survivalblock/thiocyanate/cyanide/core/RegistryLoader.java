@@ -19,13 +19,15 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.WritableRegistry;
 //? if >=26
-/*import net.minecraft.core.registries.ConcurrentHolderGetter;*/
+import net.minecraft.core.registries.ConcurrentHolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.resources.RegistryDataLoader.RegistryData;
 import net.minecraft.resources.RegistryOps;
+//? if >=26
+import net.minecraft.resources.RegistryValidator;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.resources.Resource;
@@ -33,7 +35,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagLoader;
 //? if >=26
-/*import net.minecraft.util.thread.ParallelMapTransform;*/
+import net.minecraft.util.thread.ParallelMapTransform;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 import survivalblock.thiocyanate.Thiocyanate;
@@ -44,18 +46,21 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 //? if >=26
-/*import java.util.concurrent.CompletableFuture;*/
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static survivalblock.thiocyanate.cyanide.mixin.accessor.RegistryDataLoaderAccessor.*;
+//? if >=26
+import static survivalblock.thiocyanate.cyanide.mixin.accessor.ResourceManagerRegistryLoadTaskAccessor.*;
 import static survivalblock.thiocyanate.Thiocyanate.LOGGER;
 
 /**
@@ -75,16 +80,16 @@ public final class RegistryLoader {
      * @see RegistryDataLoader#load(RegistryDataLoader.LoadingFunction, List, List)
      * @see RegistryDataLoader#load(RegistryDataLoader.LoaderFactory, List, List, Executor)  
      */
-    public static /*? <=26 {*/ RegistryAccess.Frozen /*?} else {*/ /*CompletableFuture<RegistryAccess.Frozen>*//*?}*/ load(
+    public static /*? <=26 {*/ /*RegistryAccess.Frozen *//*?} else {*/ CompletableFuture<RegistryAccess.Frozen>/*?}*/ load(
         ResourceManager resourceManager,
         List<HolderLookup.RegistryLookup<?>> contextRegistries,
         List<RegistryData<?>> registriesToLoad
-        /*? >=26 {*/ /*, Executor executor *//*?}*/
+        /*? >=26 {*/ , Executor executor /*?}*/
     ) {
         //? if >=26 {
-        /*return CompletableFuture.supplyAsync(
+        return CompletableFuture.supplyAsync(
                 () -> {
-        *///?}
+        //?}
                     final Reporter reporter = new Reporter();
                     final List<Loader<?>> registryLoader = registriesToLoad.stream().<Loader<?>>map(Loader::new).toList();
                     final Map<ResourceKey<? extends Registry<?>>, RegistryOps.RegistryInfo<?>> registryLookup = new IdentityHashMap<>();
@@ -109,20 +114,20 @@ public final class RegistryLoader {
                     // was trying to reference something that never got defined.
 
                     contextRegistries.forEach(entry -> registryLookup.put(entry.key(), thiocyanate$createInfoForContextRegistry(entry)));
-                    registryLoader.forEach(entry -> registryLookup.put(entry.data.key(), createNewRegistryInfo(/*? <=26 {*/ thiocyanate$createInfoForNewRegistry(entry.registry) /*?} else {*/ /*entry.createRegistryInfo()*//*?}*/, reporter)));
+                    registryLoader.forEach(entry -> registryLookup.put(entry.data.key(), createNewRegistryInfo(/*? <=26 {*/ /*thiocyanate$createInfoForNewRegistry(entry.registry) *//*?} else {*/ entry.createRegistryInfo()/*?}*/, reporter)));
 
                     // Load each registry content sequentially
                     //? if <26
-                    registryLoader.forEach(
+                    /*registryLoader.forEach(*/
                     //? if >=26 {
-                    /*CompletableFuture<Void> loadCompletions = CompletableFuture.allOf(
+                    CompletableFuture<Void> loadCompletions = CompletableFuture.allOf(
                     registryLoader.stream().map(
-                    *///?}
-                            loader -> loadRegistry(resourceManager, lookup, loader, reporter/*? >=26 {*//*, executor *//*?}*/)
-                    )/*? >=26 {*/ /*.toArray(CompletableFuture[]::new)) *//*?}*/;
+                    //?}
+                            loader -> loadRegistry(resourceManager, lookup, loader, reporter/*? >=26 {*/, executor /*?}*/)
+                    )/*? >=26 {*/ .toArray(CompletableFuture[]::new)) /*?}*/;
 
                     //? if >=26
-                    /*return loadCompletions.thenApplyAsync(ignored -> {*/
+                    return loadCompletions.thenApplyAsync(ignored -> {
                         // Attempt to freeze registries. This will fail if there are unbound elements in the registry, which we should be able to handle
                         // gracefully, because we know what causes these errors
                         registryLoader.forEach(loader -> freezeRegistry(loader, reporter));
@@ -140,9 +145,9 @@ public final class RegistryLoader {
 
                         return new RegistryAccess.ImmutableRegistryAccess(registries).freeze();
         //? if >=26 {
-                    /*}, executor);
+                    }, executor);
                 }).thenCompose(cf -> cf);
-        *///?}
+        //?}
     }
 
     /**
@@ -192,13 +197,14 @@ public final class RegistryLoader {
     /**
      * @see RegistryDataLoader#loadContentsFromManager
      * @see RegistryDataLoader.ResourceManagerRegistryLoadTask#load(RegistryOps.RegistryInfoLookup, Executor) 
+     * @see net.minecraft.resources.ResourceManagerRegistryLoadTask#load(RegistryOps.RegistryInfoLookup, Executor) 
      */
-    public static <T> /*? <=26 {*/ void /*?} else {*/ /*CompletableFuture<?>*//*?}*/ loadRegistry(
+    public static <T> /*? <=26 {*/ /*void *//*?} else {*/ CompletableFuture<?>/*?}*/ loadRegistry(
         ResourceManager resourceManager,
         RegistryOps.RegistryInfoLookup lookup,
         Loader<T> loader,
         Reporter reporter
-        /*? >=26 {*/ /*, Executor executor *//*?}*/
+        /*? >=26 {*/ , Executor executor /*?}*/
     ) {
         final String registryPath = Registries.elementsDirPath(loader.registry.key());
         final FileToIdConverter converter = FileToIdConverter.json(registryPath);
@@ -206,25 +212,25 @@ public final class RegistryLoader {
 
         final Function<Optional<KnownPack>, RegistrationInfo> infoCache = thiocyanate$getRegistrationInfoCache();
         //? if <26
-        final RegistryReporter registryReporter = reporter.registry(loader.data.key());
+        /*final RegistryReporter registryReporter = reporter.registry(loader.data.key());*/
 
         // Modify the element codec to add conditions, as per NeoForge's patch
         Decoder<Optional<T>> decoder = XPlatform.getInstance().getNeoForgeConditionalCodec(loader.data.elementCodec());
         //? if <26
-        for (Map.Entry<Identifier, Resource> entry : converter.listMatchingResources(resourceManager).entrySet()) {
+        /*for (Map.Entry<Identifier, Resource> entry : converter.listMatchingResources(resourceManager).entrySet()) {*/
         //? if >=26 {
-        /*return CompletableFuture.supplyAsync(() -> converter.listMatchingResources(resourceManager), executor)
+        return CompletableFuture.supplyAsync(() -> converter.listMatchingResources(resourceManager), executor)
                 .thenCompose(registryResources ->
                         ParallelMapTransform.schedule(registryResources, (id, resource) -> {
-        *///?}
+        //?}
                             //? if <26
-                            final Identifier id = entry.getKey();
+                            /*final Identifier id = entry.getKey();*/
                             final ResourceKey<T> key = ResourceKey.create(loader.registry.key(), converter.fileToId(id));
                             //? if <26
-                            final Resource resource = entry.getValue();
+                            /*final Resource resource = entry.getValue();*/
                             final RegistrationInfo info = infoCache.apply(resource.knownPackInfo());
                             //? if >=26
-                            /*final RegistryReporter registryReporter = reporter.registry(loader.data.key());*/
+                            final RegistryReporter registryReporter = reporter.registry(loader.data.key());
 
                             // Populate the unbound reference, as we are able to track any references this element makes
                             reporter.currentReference = new UnboundReference(resource, key);
@@ -261,10 +267,10 @@ public final class RegistryLoader {
                                 }
 
                                 registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), error.toString()));
-                                /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
+                                /*? <=26 {*/ /*continue; *//*?} else {*/ return AlmostRegistered.error(key, info, registryReporter, resource);/*?}*/
                             } catch (JsonIOException | IOException e) {
                                 registryReporter.loadingErrors.put(key, new LoadingError(resource.sourcePackId(), "IO Error: " + e.getMessage()));
-                                /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
+                                /*? <=26 {*/ /*continue; *//*?} else {*/ return AlmostRegistered.error(key, info, registryReporter, resource);/*?}*/
                             }
 
                             // Before parsing, consider conditions. Both loaders implement some variant of them.
@@ -273,14 +279,14 @@ public final class RegistryLoader {
                             //
                             // So, we support both
                             if (XPlatform.getInstance().checkFabricConditions(json, key, lookup)) {
-                                /*? <=26 {*/ continue; /*?} else {*/ /*return AlmostRegistered.error(key, info, registryReporter, resource);*//*?}*/
+                                /*? <=26 {*/ /*continue; *//*?} else {*/ return AlmostRegistered.error(key, info, registryReporter, resource);/*?}*/
                             }
 
                             // The optional will be null if NeoForge's conditions fail to pass
                             // In this case, we log the same message, otherwise we register the element
                             final DataResult<Optional<T>> result = decoder.parse(ops, json);
         //? if >=26 {
-                            /*return new AlmostRegistered<>(key, result, info, registryReporter, resource);
+                            return new AlmostRegistered<>(key, result, info, registryReporter, resource);
                         }, executor)).thenAcceptAsync(loadedEntries -> {
                             synchronized (loader.writeLock) {
                                 loadedEntries.forEach((identifier, almostRegistered) -> {
@@ -288,14 +294,14 @@ public final class RegistryLoader {
                                     DataResult<Optional<T>> result = almostRegistered.result;
                                     RegistrationInfo info = almostRegistered.info;
                                     RegistryReporter registryReporter = almostRegistered.reporter;
-        *///?}
+        //?}
                                     result.ifSuccess(candidate ->
                                             candidate.ifPresentOrElse(
                                                     value -> loader.registry.register(key, value, info),
                                                     () -> LOGGER.debug("Skipping loading registry entry {} as its conditions were not met", key)
                                             ));
                                     result.ifError(error -> registryReporter.loadingErrors.put(key, new LoadingError(
-                                            /*? <=26 {*/ resource.sourcePackId() /*?} else {*/ /*almostRegistered.sourcePackId*//*?}*/,
+                                            /*? <=26 {*/ /*resource.sourcePackId() *//*?} else {*/ almostRegistered.sourcePackId/*?}*/,
                                             "Parsing Error: " + error.message()
                                     )));
 
@@ -308,9 +314,9 @@ public final class RegistryLoader {
                                     reporter.unboundReferences.remove(key);
                                     reporter.currentReference = null;
         //? if <26
-        }
+        /*}*/
         //? if >=26 {
-                                /*});
+                                });
                             }
                             var key = loader.registry.key();
                             TagLoader.ElementLookup<Holder<T>> tagElementLookup = TagLoader.ElementLookup.fromGetters(
@@ -321,10 +327,10 @@ public final class RegistryLoader {
                                 loader.registry.bindTags(pendingTags);
                             }
                         }, executor);
-        *///?}
+        //?}
 
         //? if <26
-        TagLoader.loadTagsForRegistry(resourceManager, loader.registry);
+        /*TagLoader.loadTagsForRegistry(resourceManager, loader.registry);*/
     }
 
     @SuppressWarnings("unchecked")
@@ -384,9 +390,17 @@ public final class RegistryLoader {
 
         // Only report empty registry errors if there were no loading errors for the registry,
         // as this would then be a knock on effect
-        if (loader.data.requiredNonEmpty() && loader.registry.isEmpty() && registryReporter.loadingErrors.isEmpty()) {
+        if (loader.data/*? <=26 {*/ /*.requiredNonEmpty() *//*?} else {*/ .validator() == RegistryValidator.NON_EMPTY/*?}*/ && loader.registry.isEmpty() && registryReporter.loadingErrors.isEmpty()) {
             registryReporter.miscErrors.add("Empty registry: " + loader.data.key().identifier());
         }
+        // if >= 26 {
+        RegistryValidator<T> validator = loader.data.validator();
+        if (validator != RegistryValidator.NONE && validator != RegistryValidator.NON_EMPTY) {
+            Map<ResourceKey<?>, Exception> errors = new HashMap<>();
+            validator.validate(loader.registry, errors);
+            errors.values().forEach(exception -> registryReporter.miscErrors.add(exception.getMessage()));
+        }
+        //?}
     }
 
     /**
@@ -404,21 +418,21 @@ public final class RegistryLoader {
         public final RegistryData<T> data;
         public final WritableRegistry<T> registry;
         //? if >=26 {
-        /*public final ConcurrentHolderGetter<T> concurrentRegistrationGetter;
+        public final ConcurrentHolderGetter<T> concurrentRegistrationGetter;
         public final Object writeLock = new Object();
-        *///?}
+        //?}
 
         public Loader(RegistryData<T> data) {
             this.data = data;
             this.registry = new MappedRegistry<>(data.key(), Lifecycle.stable());
-            /*? >=26 {*/ /*this.concurrentRegistrationGetter = new ConcurrentHolderGetter<>(this.writeLock, this.registry.createRegistrationLookup()); *//*?}*/
+            /*? >=26 {*/ this.concurrentRegistrationGetter = new ConcurrentHolderGetter<>(this.writeLock, this.registry.createRegistrationLookup()); /*?}*/
         }
 
         //? if >=26 {
-        /*public RegistryOps.RegistryInfo<T> createRegistryInfo() {
+        public RegistryOps.RegistryInfo<T> createRegistryInfo() {
             return new RegistryOps.RegistryInfo<>(this.registry, this.concurrentRegistrationGetter, this.registry.registryLifecycle());
         }
-        *///?}
+        //?}
     }
 
     public static class Reporter {
@@ -489,7 +503,7 @@ public final class RegistryLoader {
     public record LoadingError(String sourcePackId, String message) {}
 
     //? if >=26 {
-    /*public record AlmostRegistered<T>(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, String sourcePackId) {
+    public record AlmostRegistered<T>(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, String sourcePackId) {
         public AlmostRegistered(ResourceKey<T> key, DataResult<Optional<T>> result, RegistrationInfo info, RegistryReporter reporter, Resource resource) {
             this(key, result, info, reporter, resource.sourcePackId());
         }
@@ -498,5 +512,5 @@ public final class RegistryLoader {
             return new AlmostRegistered<>(key, DataResult.error(() -> ""), info, reporter, resource);
         }
     }
-    *///?}
+    //?}
 }
