@@ -9,4 +9,4 @@ plugins {
     id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22" apply false
     id("dev.kikugie.fletching-table.neoforge") version "0.1.0-alpha.22" apply false
 }
-stonecutter active "1.21.11-neoforge"
+stonecutter active "26.1-fabric"

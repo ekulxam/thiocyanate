@@ -19,10 +19,12 @@ import java.util.function.Function;
  */
 @Mixin(RegistryDataLoader.class)
 public interface RegistryDataLoaderAccessor {
-    @Accessor("REGISTRATION_INFO_CACHE")
+    //? if <26 {
+    /*@Accessor("REGISTRATION_INFO_CACHE")
     static Function<Optional<KnownPack>, RegistrationInfo> thiocyanate$getRegistrationInfoCache() {
         throw new UnsupportedOperationException("Mixin accessor");
     }
+    *///?}
 
     @Invoker("createInfoForContextRegistry")
     static <T> RegistryOps.RegistryInfo<T> thiocyanate$createInfoForContextRegistry(HolderLookup.RegistryLookup<T> registryLookup) {
@@ -30,9 +32,9 @@ public interface RegistryDataLoaderAccessor {
     }
 
     //? if <26 {
-    @Invoker("createInfoForNewRegistry")
+    /*@Invoker("createInfoForNewRegistry")
     static <T> RegistryOps.RegistryInfo<T> thiocyanate$createInfoForNewRegistry(WritableRegistry<T> registry) {
         throw new UnsupportedOperationException("Mixin invoker");
     }
-    //?}
+    *///?}
 }
