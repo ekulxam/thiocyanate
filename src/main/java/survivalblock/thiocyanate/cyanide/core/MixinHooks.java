@@ -43,7 +43,7 @@ public final class MixinHooks {
         };
     }
 
-    public static Codec<FloatProvider> validate(float min, float max, Codec<FloatProvider> codec) {
+    public static <T extends FloatProvider> Codec<T> validate(float min, float max, Codec<T> codec) {
         return codec.validate(provider -> {
             if (provider.getMinValue() < min) {
                 return DataResult.error(() -> "Value provider too low (must be >= %g), got %s".formatted(min, prettyPrint(provider)));

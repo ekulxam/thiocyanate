@@ -108,6 +108,12 @@ tasks {
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
         dependsOn("build")
     }
+
+    register<Sync>("syncTestmodDatagen") {
+        from(project(":${minecraft}-fabric").tasks.named("runTestmodDatagen"))
+        into(file("src/testmod/generated/"))
+        exclude("src/testmod/generated/*/pack.mcmeta")
+    }
 }
 
 tasks.named("build") {

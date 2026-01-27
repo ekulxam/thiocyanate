@@ -3,9 +3,9 @@
     "description": {
       "translate": "dataPack.thiocyanate.feature_cycle"
     },
-    "max_format": 94,
+    "max_format": 100000,
     "min_format": [
-      94,
+      2,
       1
     ]
   }

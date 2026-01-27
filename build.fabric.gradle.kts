@@ -191,6 +191,10 @@ loom {
     }
 }
 
+tasks.named("runTestmodDatagen") {
+    outputs.dir("src/testmod/generated")
+}
+
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.

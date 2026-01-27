@@ -10,6 +10,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+//? if fabric && <26
+/*import net.fabricmc.loader.api.FabricLoader;*/
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.biome.Biome;
@@ -25,6 +27,7 @@ import java.util.function.Function;
 public final class FeatureCycleDetector {
     private FeatureCycleDetector() {
     }
+
     /**
      * A modified version of {@link FeatureSorter#buildFeaturesPerStep} with several improvements, in order to properly report errors.
      * Added comments, removed vanilla's slow as heck "try this again by removing biomes until it doesn't break" detector and replace
@@ -37,16 +40,14 @@ public final class FeatureCycleDetector {
      * @throws IllegalStateException if a feature was detected.
      */
     @SuppressWarnings("ConstantConditions")
-    public static List<FeatureSorter.StepFeatureData> buildFeaturesPerStep(
-        List<Holder<Biome>> allBiomes,
-        Function<Holder<Biome>, List<HolderSet<PlacedFeature>>> biomeFeatures
+    public static <T> List<FeatureSorter.StepFeatureData> buildFeaturesPerStep(
+        List<T> allBiomes,
+        Function<T, List<HolderSet<PlacedFeature>>> biomeFeatures
     ) {
         // Maps to establish identity among features and biomes
         // We assign features and biomes ID numbers based on ==, and then create wrapper objects which respect equals() identity
         final Reference2IntMap<PlacedFeature> featureToIntIdMap = new Reference2IntOpenHashMap<>();
-        final Reference2IntMap<Biome> biomeToIntIdMap = new Reference2IntOpenHashMap<>();
         final MutableInt nextFeatureId = new MutableInt(0);
-        final MutableInt nextBiomeId = new MutableInt(0);
 
         // Sort by step, then by index
         final Comparator<FeatureData> compareByStepThenByIndex = Comparator.comparingInt(FeatureData::step).thenComparingInt(FeatureData::featureId);
@@ -55,9 +56,9 @@ public final class FeatureCycleDetector {
         int maxSteps = 0;
 
         // Trace of where FeatureData's are found, in reference to biomes, indexes, and steps
-        final Map<FeatureData, Map<BiomeData, IntSet>> nodesToTracebacks = new HashMap<>();
+        final Map<FeatureData, Map<BiomeData<T>, IntSet>> nodesToTracebacks = new HashMap<>();
 
-        for (Holder<Biome> biomeHolder : allBiomes) {
+        for (T biomeHolder : allBiomes) {
             // Loop through all biomes
             // For each biome, we ultimately compute the maxSteps - the maximum number of generation steps of any biome
             // We then take the features in the biome, and, treating (step, index) as an absolute ordering, add them to a flat list of FeatureData
@@ -65,7 +66,6 @@ public final class FeatureCycleDetector {
             // At the end, once we've computed this list, we then have that F1, F2, ... Fn, where Fj must come before Fi if j < i
             // So, we represent that as a graph F1 -> F2 -> ... -> Fn
 
-            final Biome biome = biomeHolder.value();
             final List<FeatureData> flatDataList = new ArrayList<>();
             final List<HolderSet<PlacedFeature>> features = biomeFeatures.apply(biomeHolder);
 
@@ -79,7 +79,7 @@ public final class FeatureCycleDetector {
                     flatDataList.add(featureIdentity);
 
                     // Track traceback biomes
-                    final BiomeData biomeIdentity = new BiomeData(idFor(biome, biomeToIntIdMap, nextBiomeId), biome, biomeHolder);
+                    final BiomeData<T> biomeIdentity = new BiomeData<>(biomeHolder);
 
                     nodesToTracebacks
                         .computeIfAbsent(featureIdentity, key -> new HashMap<>(1))
@@ -218,7 +218,7 @@ public final class FeatureCycleDetector {
         return objectToIntIdMap.computeIfAbsent(object, key -> nextId.getAndIncrement());
     }
 
-    public static String buildErrorMessage(Map<FeatureData, Map<BiomeData, IntSet>> tracebacks, List<FeatureData> cycle) {
+    public static <T> String buildErrorMessage(Map<FeatureData, Map<BiomeData<T>, IntSet>> tracebacks, List<FeatureData> cycle) {
         final StringBuilder error = new StringBuilder("""
                 A feature cycle was found!
 
@@ -227,7 +227,7 @@ public final class FeatureCycleDetector {
 
         final ListIterator<FeatureData> iterator = cycle.listIterator();
         final FeatureData start = iterator.next();
-        Map<BiomeData, IntSet> prevTracebacks = tracebacks.get(start);
+        Map<BiomeData<T>, IntSet> prevTracebacks = tracebacks.get(start);
         error.append("At step ")
             .append(start.step)
             .append('\n')
@@ -237,9 +237,9 @@ public final class FeatureCycleDetector {
 
         while (iterator.hasNext()) {
             final FeatureData current = iterator.next();
-            final Map<BiomeData, IntSet> currentTracebacks = tracebacks.get(current);
+            final Map<BiomeData<T>, IntSet> currentTracebacks = tracebacks.get(current);
             int found = 0;
-            for (BiomeData biome : Sets.intersection(prevTracebacks.keySet(), currentTracebacks.keySet())) {
+            for (BiomeData<T> biome : Sets.intersection(prevTracebacks.keySet(), currentTracebacks.keySet())) {
                 // Check if the features have a relative ordering from prev -> current, in that biome
                 final int prevTb = prevTracebacks.get(biome).intStream().min().orElseThrow();
                 final int currTb = currentTracebacks.get(biome).intStream().max().orElseThrow();
@@ -285,15 +285,41 @@ public final class FeatureCycleDetector {
     }
 
     /**
-     * @param biomeId An integer ID mapping for the biome
-     * @param biome The biome itself
+     * @param source The biome itself, usually a {@link Holder}<{@link Biome}>
      */
-    public record BiomeData(int biomeId, Biome biome, Holder<Biome> source) {
+    public record BiomeData<T>(T source) {
         public String name() {
-            return this.source.unwrap().map(
-                e -> e.identifier().toString(),
-                e -> "[Inline biome: " + biome + "]"
+            return applyOnMaybeHolder(
+                    holder -> holder.unwrap().map(
+                            e -> e.identifier().toString(),
+                            e -> {
+                                Object obj = holder.value();
+                                String className = obj.getClass().getSimpleName();
+                                //? if fabric && <26
+                                /*className = FabricLoader.getInstance().getMappingResolver().unmapClassName("yarn", className);*/
+                                return "[Inline " + className + ": " + obj + "]";
+                            }),
+                    Object::toString
             );
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            BiomeData<?> other = (BiomeData<?>) o;
+            return applyOnMaybeHolder(
+                    holder -> other.source instanceof Holder<?> otherHolder && Objects.equals(holder.value(), otherHolder.value()),
+                    source -> Objects.equals(source, other.source)
+            );
+        }
+
+        @Override
+        public int hashCode() {
+            return applyOnMaybeHolder(Holder::value, source -> source).hashCode();
+        }
+
+        public <R> R applyOnMaybeHolder(Function<Holder<?>, R> holderFunction, Function<T, R> valueFunction) {
+            return this.source instanceof Holder<?> holder ? holderFunction.apply(holder) : valueFunction.apply(this.source);
         }
     }
 }
