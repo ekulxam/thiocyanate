@@ -2,7 +2,7 @@
 package survivalblock.thiocyanate_test.datagen;
 
 import com.mojang.serialization.Codec;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricCodecDataProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -20,7 +20,7 @@ public final class CyanideCodecGenerator<T> extends FabricCodecDataProvider<T> {
     private final Set<ResourceKey<T>> keys = new HashSet<>();
     private final String directoryName;
 
-    public CyanideCodecGenerator(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registriesFuture, String directoryName, Codec<T> codec, ResourceKey<T>... keys) {
+    public CyanideCodecGenerator(FabricPackOutput dataOutput, CompletableFuture<HolderLookup.Provider> registriesFuture, String directoryName, Codec<T> codec, ResourceKey<T>... keys) {
         super(dataOutput, registriesFuture, PackOutput.Target.DATA_PACK, directoryName, codec);
         this.directoryName = directoryName;
         this.keys.addAll(Arrays.asList(keys));

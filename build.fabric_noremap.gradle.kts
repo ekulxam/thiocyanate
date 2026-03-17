@@ -20,8 +20,7 @@ sourceSets {
 
 version = "${project.property("mod_version")}+${stonecutter.current.version}-fabric"
 group = project.property("maven_group") as String
-val minecraft : String = if (hasProperty("deps.minecraft")) project.property("deps.minecraft") as String
-    else stonecutter.current.version
+val minecraft = project.findProperty("deps.minecraft") as? String ?: stonecutter.current.version
 
 base.archivesName = project.property("archives_base_name") as String
 
@@ -49,19 +48,6 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     implementation("net.fabricmc.fabric-api:fabric-api:${project.property("deps.fabric_api")}")
-}
-
-stonecutter {
-    replacements.string {
-        direction = eval(minecraft, ">1.21.10")
-        replace("ResourceLocation", "Identifier")
-    }
-    val loader = ("${project.property("deps.compatibleLoaders")}".split(", ").toList())[0]
-    constants.match(
-        loader,
-        "fabric",
-        "neoforge"
-    )
 }
 
 fletchingTable {
