@@ -9,7 +9,7 @@ plugins {
     id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22" apply false
     id("dev.kikugie.fletching-table.neoforge") version "0.1.0-alpha.22" apply false
 }
-stonecutter active "26.1-fabric"
+stonecutter active "26.1.1-fabric"
 
 stonecutter parameters {
     val minecraft = (node.project.findProperty("deps.minecraft") ?: node.metadata.version) as String
@@ -20,6 +20,10 @@ stonecutter parameters {
     replacements.string {
         direction = eval(minecraft, ">1.21.11")
         replace("FabricDataOutput", "FabricPackOutput")
+    }
+    replacements.string {
+        direction = eval(minecraft, ">=26.1.1")
+        replace("c.value()", "c.getValue()")
     }
     val loader = ("${node.project.property("deps.compatibleLoaders")}".split(", ").toList())[0]
     constants.match(

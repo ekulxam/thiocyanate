@@ -1,6 +1,2 @@
-Thiocyanate 1.0.2
-- Port to 26.1-snapshot-4 for fabric
-- Fix datagen for both loaders
-- `FeatureCycleDetector.buildFeaturesPerStep` no longer relies on `Holder<Biome>`s
-- Bump loom version to 1.15.1
-- 
+Thiocyanate 1.0.3
+- Update to 26.1.1 for both loaders (drop 26.1-snapshot-4 for fabric)
