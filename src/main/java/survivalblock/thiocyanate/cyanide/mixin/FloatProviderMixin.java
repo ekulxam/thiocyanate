@@ -16,8 +16,15 @@ import survivalblock.thiocyanate.cyanide.core.MixinHooks;
 /*@Mixin(FloatProvider.class)
 *///?}
 public abstract class FloatProviderMixin {
-    @Inject(method = "codec", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "codec(FF)Lcom/mojang/serialization/Codec;", at = @At("HEAD"), cancellable = true)
     private static void codecWithBetterValidation(float minInclusive, float maxInclusive, CallbackInfoReturnable<Codec<FloatProvider>> cir) {
         cir.setReturnValue(MixinHooks.validate(minInclusive, maxInclusive, /*? >=26 {*/ FloatProviders  /*?} else {*/ /*FloatProvider *//*?}*/.CODEC));
     }
+
+    //? if >=26.2 {
+    @Inject(method = "codec(F)Lcom/mojang/serialization/Codec;", at = @At("HEAD"), cancellable = true)
+    private static void codecWithBetterValidation(float minInclusive, CallbackInfoReturnable<Codec<FloatProvider>> cir) {
+        cir.setReturnValue(MixinHooks.validate(minInclusive, /*? >=26 {*/ FloatProviders  /*?} else {*/ /*FloatProvider *//*?}*/.CODEC));
+    }
+    //?}
 }

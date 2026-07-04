@@ -17,6 +17,7 @@ import java.util.function.Function;
 public abstract class FeatureSorterMixin {
     /**
      * Replace this with a method that has a much better error tracing and is probably more efficient
+     * TODO: find incompats
      */
     @Inject(method = "buildFeaturesPerStep", at = @At("HEAD"), cancellable = true)
     private static <T> void buildFeaturesPerStepWithAdvancedCycleDetection(List<T> biomes, Function<T, List<HolderSet<PlacedFeature>>> biomeFeatures, boolean topLevel, CallbackInfoReturnable<List<FeatureSorter.StepFeatureData>> cir) {

@@ -13,6 +13,7 @@ import survivalblock.thiocyanate.Thiocyanate;
 
 import java.util.Map;
 
+@SuppressWarnings({"JavadocReference", "UnstableApiUsage"})
 public class ThiocyanateFabric extends Thiocyanate implements ModInitializer {
     @Override
     public void onInitialize() {

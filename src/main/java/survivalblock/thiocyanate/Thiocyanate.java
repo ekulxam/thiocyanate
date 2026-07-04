@@ -24,7 +24,7 @@ public abstract class Thiocyanate implements XPlatform {
         return instance;
     }
 
-    public static void setInstance(Thiocyanate platform) {
+    protected static void setInstance(Thiocyanate platform) {
         if (instance != null) {
             Thiocyanate.LOGGER.warn("Setting a new instance ({}) of Thiocyanate when an existing one ({}) is present!", platform, instance);
         }

@@ -43,30 +43,48 @@ public final class MixinHooks {
         };
     }
 
+    //~ if >=26.1 'c.getValue()' -> 'c.value()' {
+    //~ if >=26.1 'getMinValue()' -> 'min()' {
+    //~ if >=26.1 'getMaxValue()' -> 'max()' {
     public static <T extends FloatProvider> Codec<T> validate(float min, float max, Codec<T> codec) {
         return codec.validate(provider -> {
-            if (provider./*? >=26.1.1 {*/ min /*?} else {*/ /*getMinValue *//*?}*/() < min) {
+            if (provider.min() < min) {
                 return DataResult.error(() -> "Value provider too low (must be >= %g), got %s".formatted(min, prettyPrint(provider)));
             }
-            if (provider./*? >=26.1.1 {*/ max /*?} else {*/ /*getMaxValue *//*?}*/() > max) {
+            if ( provider.max() > max) {
                 return DataResult.error(() -> "Value provider too high (must be <= %g), got %s".formatted(max, prettyPrint(provider)));
             }
             return DataResult.success(provider);
         });
     }
 
+    //? if >=26.2 {
+    public static <T extends FloatProvider> Codec<T> validate(float min, Codec<T> codec) {
+        return codec.validate(provider -> {
+            if (provider.min() < min) {
+                return DataResult.error(() -> "Value provider too low (must be >= %g), got %s".formatted(min, prettyPrint(provider)));
+            }
+            return DataResult.success(provider);
+        });
+    }
+    //?}
+
     public static String prettyPrint(FloatProvider provider) {
         if (provider instanceof ConstantFloat c) return "" + c./*? >=26.1.1 {*/ value /*?} else {*/ /*getValue *//*?}*/();
         final Identifier id = BuiltInRegistries.FLOAT_PROVIDER_TYPE.getKey(provider./*? >=26.1.1 {*/ codec /*?} else {*/ /*getType *//*?}*/());
         return "%s[min=%g, max=%g]".formatted(id == null ? "" : id, provider./*? >=26.1.1 {*/ min /*?} else {*/ /*getMinValue *//*?}*/(), provider./*? >=26.1.1 {*/ max /*?} else {*/ /*getMaxValue *//*?}*/());
     }
+    //~}
+    //~}
 
+    //~ if >=26.1 'getMinValue()' -> 'minInclusive()' {
+    //~ if >=26.1 'getMaxValue()' -> 'maxInclusive()' {
     public static <T extends IntProvider> Codec<T> validate(int min, int max, Codec<T> codec) {
         return codec.validate(provider -> {
-            if (provider./*? >=26.1.1 {*/ minInclusive /*?} else {*/ /*getMinValue *//*?}*/() < min) {
+            if (provider.minInclusive() < min) {
                 return DataResult.error(() -> "Value provider too low (must be >= %d), got %s".formatted(min, prettyPrint(provider)));
             }
-            if (provider./*? >=26.1.1 {*/ maxInclusive /*?} else {*/ /*getMaxValue *//*?}*/() > max) {
+            if (provider.maxInclusive() > max) {
                 return DataResult.error(() -> "Value provider too high (must be <= %d), got %s".formatted(max, prettyPrint(provider)));
             }
             return DataResult.success(provider);
@@ -75,8 +93,12 @@ public final class MixinHooks {
 
     public static String prettyPrint(IntProvider provider) {
         // This is a pretty good heuristic, that's better than showing "[-1--1]" for a constant -1
-        if (provider instanceof ConstantInt c) return "" + c./*? >=26.1.1 {*/ value /*?} else {*/ /*getValue *//*?}*/();
-        final Identifier id = BuiltInRegistries.INT_PROVIDER_TYPE.getKey(provider./*? >=26.1.1 {*/ codec /*?} else {*/ /*getType *//*?}*/());
-        return "%s[min=%d, max=%d]".formatted(id == null ? "" : id, provider./*? >=26.1.1 {*/ minInclusive /*?} else {*/ /*getMinValue *//*?}*/(), provider./*? >=26.1.1 {*/ maxInclusive /*?} else {*/ /*getMaxValue *//*?}*/());
+        if (provider instanceof ConstantInt c) return "" + c.value();
+        //~ if >=26.1 'getType()' -> 'codec()'
+        final Identifier id = BuiltInRegistries.INT_PROVIDER_TYPE.getKey(provider.codec());
+        return "%s[min=%d, max=%d]".formatted(id == null ? "" : id, provider.minInclusive(), provider.maxInclusive());
     }
+    //~}
+    //~}
+    //~}
 }
