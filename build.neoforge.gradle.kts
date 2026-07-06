@@ -79,6 +79,47 @@ tasks.withType<ProcessResources>().configureEach {
     }
 }
 
+val datagenTestmodPackMetadatas by tasks.registering {
+    val mcmetas = mapOf(
+        "src/testmod/generated/datapacks/feature_cycle/pack.mcmeta" to """
+            {
+              "pack": {
+                "description": {
+                  "translate": "dataPack.thiocyanate.feature_cycle"
+                },
+                "max_format": 100000,
+                "min_format": [
+                  2,
+                  1
+                ]
+              }
+            }
+        """.trimIndent(),
+        "src/testmod/generated/datapacks/test/pack.mcmeta" to """
+            {
+              "pack": {
+                "description": {
+                  "translate": "dataPack.thiocyanate.test"
+                },
+                "max_format": 100000,
+                "min_format": [
+                  2,
+                  1
+                ]
+              }
+            }
+        """.trimIndent()
+    )
+
+    outputs.files(mcmetas.keys.map { layout.projectDirectory.file(it) })
+
+    doLast {
+        mcmetas.forEach { (path, content) ->
+            layout.projectDirectory.file(path).asFile.writeText(content)
+        }
+    }
+}
+
 tasks {
     withType<ProcessResources> {
         exclude("**/neoforge.mod.json", "**/*.accesswidener", "**/mods.toml")
@@ -96,9 +137,10 @@ tasks {
     }
 
     register<Sync>("syncTestmodDatagen") {
+        dependsOn(datagenTestmodPackMetadatas)
         from(project(":${minecraft}-fabric").tasks.named("runTestmodDatagen"))
         into(file("src/testmod/generated/"))
-        exclude("src/testmod/generated/*/pack.mcmeta")
+        exclude("**/pack.mcmeta")
     }
 }
 

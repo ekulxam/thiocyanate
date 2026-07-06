@@ -22,7 +22,7 @@ import net.minecraft.data.worldgen.features.OreFeatures;
 import net.minecraft.data.worldgen.placement.MiscOverworldPlacements;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 //? if neoforge
-/*import net.minecraft.network.chat.Component;*/
+//import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 //? if neoforge {
@@ -75,11 +75,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 //? if neoforge
-/*import java.util.function.Consumer;*/
+//import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 //? if neoforge
-/*@Mod(ThiocyanateTestmod.MOD_ID)*/
+//@Mod(ThiocyanateTestmod.MOD_ID)
 public class ThiocyanateTestmod /*? fabric {*/ implements ModInitializer /*?}*/ {
 	public static final String MOD_ID = "thiocyanate_test";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
