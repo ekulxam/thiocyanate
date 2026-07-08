@@ -5,7 +5,8 @@
 	"name": "Thiocyanate",
 	"description": "SCN- : a modern port of Cyanide",
 	"authors": [
-		"Survivalblock"
+		"Survivalblock",
+        "AlcatrazEscapee"
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/thiocyanate",

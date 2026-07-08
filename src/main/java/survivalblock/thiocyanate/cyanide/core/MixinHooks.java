@@ -40,6 +40,11 @@ public final class MixinHooks {
             public <T1> RecordBuilder<T1> encode(T input, DynamicOps<T1> ops, RecordBuilder<T1> prefix) {
                 return codec.encode(input, ops, prefix);
             }
+
+            @Override
+            public String toString() {
+                return "[ThiocyanateWrapped: " + codec + "]";
+            }
         };
     }
 
